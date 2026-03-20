@@ -1,4 +1,4 @@
-# Raidbots Clone
+# SimHammer
 
 Self-hosted SimulationCraft web app.
 

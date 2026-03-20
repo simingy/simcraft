@@ -15,7 +15,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd ~/simcraft
+            cd ~/simhammer
             git pull origin master
             export SERVER_IP=${{ secrets.SERVER_HOST }}
             docker compose up -d --build

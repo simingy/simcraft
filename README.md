@@ -1,12 +1,12 @@
-# SimCraft Runner
+# SimHammer
 
 Self-hosted [SimulationCraft](https://github.com/simulationcraft/simc) web app. Paste your SimC addon string, configure options, and get DPS results with ability breakdowns, stat weights, and Top Gear comparisons.
 
 ## Quick Start (Docker)
 
 ```bash
-git clone <repo-url> simcraft
-cd simcraft
+git clone <repo-url> simhammer
+cd simhammer
 cp .env.example .env
 docker compose up --build
 ```
@@ -20,12 +20,12 @@ The Docker build compiles `simc` from source (takes a few minutes on first build
 ## Deploy to a VPS
 
 1. Clone the repo on your server
-2. Create `.env` from the example and set `SERVER_IP` to your server's public IP:
+2. Create `.env` from the example and set `SERVER_IP` to your domain or IP:
 
 ```bash
 cp .env.example .env
 nano .env
-# Set SERVER_IP=<your-ip>
+# Set SERVER_IP=simhammer.com
 ```
 
 3. Start the stack:
@@ -33,8 +33,6 @@ nano .env
 ```bash
 docker compose up -d --build
 ```
-
-The frontend will be at `http://<your-ip>:3000`.
 
 ## Local Dev (without Docker)
 
@@ -93,13 +91,13 @@ export SIMC_PATH=/path/to/simc
 | `SIMC_PATH` | `/usr/local/bin/simc` | Path to simc binary |
 | `SIMC_THREADS` | `4` | Threads per simc process |
 | `SIMC_TIMEOUT` | `300` | Max seconds per simulation |
-| `DATABASE_URL` | `sqlite+aiosqlite:///./raidbots.db` | Database connection string |
+| `DATABASE_URL` | `sqlite+aiosqlite:///./simhammer.db` | Database connection string |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | Allowed CORS origins |
 | `MAX_ITERATIONS` | `10000` | Maximum allowed iterations |
 | `DEFAULT_ITERATIONS` | `1000` | Default iteration count |
 | `DROP_DB_ON_STARTUP` | `false` | Wipe DB on boot (useful for dev) |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | API URL for the frontend |
-| `SERVER_IP` | `localhost` | Server IP used in docker-compose |
+| `SERVER_IP` | `localhost` | Server IP/domain used in docker-compose |
 
 ## Scaling Workers
 

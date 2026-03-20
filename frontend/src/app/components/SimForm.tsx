@@ -61,7 +61,7 @@ export default function SimForm() {
         <textarea
           value={simcInput}
           onChange={(e) => setSimcInput(e.target.value)}
-          placeholder="Paste your SimulationCraft addon export here…"
+          placeholder="Paste your SimC addon export here…"
           className="input-field h-52 font-mono text-xs resize-y"
         />
         {detectedInfo && (

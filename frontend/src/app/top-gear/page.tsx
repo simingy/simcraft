@@ -109,7 +109,7 @@ export default function TopGearPage() {
         <textarea
           value={simcInput}
           onChange={(e) => setSimcInput(e.target.value)}
-          placeholder="Paste your SimulationCraft addon export here…"
+          placeholder="Paste your SimC addon export here…"
           className="input-field h-36 font-mono text-xs resize-y"
         />
       </div>

@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down...")
 
 
-app = FastAPI(title="SimCraft", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="SimHammer", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

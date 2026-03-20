@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     SIMC_PATH: str = "/usr/local/bin/simc"
     SIMC_THREADS: int = 4
     SIMC_TIMEOUT: int = 300
-    DATABASE_URL: str = "sqlite+aiosqlite:///./raidbots.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./simhammer.db"
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
     MAX_ITERATIONS: int = 10000
     DEFAULT_ITERATIONS: int = 1000

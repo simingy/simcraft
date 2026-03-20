@@ -3,7 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SimCraft Runner",
+  title: "SimHammer",
   description: "Run SimulationCraft simulations from your browser",
 };
 
@@ -34,7 +34,7 @@ export default function RootLayout({
                 </svg>
               </div>
               <span className="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors">
-                SimCraft
+                SimHammer
               </span>
             </a>
             <nav className="flex items-center gap-0.5">

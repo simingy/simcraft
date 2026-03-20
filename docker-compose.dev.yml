@@ -11,7 +11,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - SIMC_PATH=/usr/local/bin/simc
-      - DATABASE_URL=sqlite+aiosqlite:///./db/raidbots.db
+      - DATABASE_URL=sqlite+aiosqlite:///./db/simhammer.db
       - DROP_DB_ON_STARTUP=true
     depends_on:
       - redis
@@ -25,7 +25,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - SIMC_PATH=/usr/local/bin/simc
-      - DATABASE_URL=sqlite+aiosqlite:///./db/raidbots.db
+      - DATABASE_URL=sqlite+aiosqlite:///./db/simhammer.db
     depends_on:
       - redis
     volumes:
