@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { API_URL } from "../lib/api";
+import FightStyleSelector from "./FightStyleSelector";
 import ThreadPresetSelector from "./ThreadPresetSelector";
 
 export default function SimForm() {
   const [simcInput, setSimcInput] = useState("");
   const [simType, setSimType] = useState<"quick" | "stat_weights">("quick");
+  const [fightStyle, setFightStyle] = useState("Patchwerk");
   const [threads, setThreads] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ export default function SimForm() {
         body: JSON.stringify({
           simc_input: simcInput,
           iterations: 10000,
-          fight_style: "Patchwerk",
+          fight_style: fightStyle,
           target_error: 0.1,
           sim_type: simType,
           threads,
@@ -65,6 +67,8 @@ export default function SimForm() {
         )}
       </div>
 
+      <FightStyleSelector value={fightStyle} onChange={setFightStyle} />
+
       <div className="flex gap-2">
         {(["quick", "stat_weights"] as const).map((t) => (
           <button
@@ -82,9 +86,7 @@ export default function SimForm() {
         ))}
       </div>
 
-      <div className="card p-5">
-        <ThreadPresetSelector value={threads} onChange={setThreads} />
-      </div>
+      <ThreadPresetSelector value={threads} onChange={setThreads} />
 
       {error && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">

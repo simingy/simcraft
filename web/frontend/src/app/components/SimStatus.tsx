@@ -12,43 +12,16 @@ interface SimStatusProps {
 }
 
 /**
- * Smoothly interpolates the displayed progress between backend updates.
- * The backend only reports progress at a few milestones (e.g. 10%, 40%, 70%),
- * so we gradually advance the bar in between to avoid it looking frozen.
+ * Tracks server-reported progress. Only advances when the backend
+ * reports a higher value (i.e. a profileset or stage actually completed).
+ * The CSS transition on the bar handles visual smoothing.
  */
-function useSmoothedProgress(serverProgress: number, isRunning: boolean): number {
+function useSmoothedProgress(serverProgress: number): number {
   const [display, setDisplay] = useState(serverProgress);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    // Jump forward immediately when the server reports a higher value
     setDisplay((prev) => Math.max(prev, serverProgress));
   }, [serverProgress]);
-
-  useEffect(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-
-    if (!isRunning) {
-      intervalRef.current = null;
-      return;
-    }
-
-    // Slowly creep toward 95% while the sim is running.
-    // The remaining 5% is reserved for the actual completion jump.
-    intervalRef.current = setInterval(() => {
-      setDisplay((prev) => {
-        const ceiling = Math.max(serverProgress + 15, 95);
-        if (prev >= ceiling) return prev;
-        // Slow down as we approach the ceiling
-        const step = Math.max(0.3, (ceiling - prev) * 0.04);
-        return Math.min(prev + step, ceiling);
-      });
-    }, 500);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isRunning, serverProgress]);
 
   return Math.round(display);
 }
@@ -99,7 +72,7 @@ export default function SimStatus({
   stagesCompleted,
 }: SimStatusProps) {
   const isRunning = status === "running";
-  const displayProgress = useSmoothedProgress(progress, isRunning);
+  const displayProgress = useSmoothedProgress(progress);
   const cpuUsage = useCpuUsage(isRunning);
   const title = progressStage || (status === "pending" ? "Queued" : "Simulating");
   const hasStages = stagesCompleted && stagesCompleted.length > 0;

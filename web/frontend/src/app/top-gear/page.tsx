@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import FightStyleSelector from "../components/FightStyleSelector";
 import ThreadPresetSelector from "../components/ThreadPresetSelector";
 import TopGearItemSelector from "../components/TopGearItemSelector";
 import {
@@ -11,21 +12,16 @@ import {
 
 import { API_URL } from "../lib/api";
 
-const ITERATION_STEPS = [100, 250, 500, 1000, 2500, 5000, 10000];
-
 export default function TopGearPage() {
   const [simcInput, setSimcInput] = useState("");
   const [itemsBySlot, setItemsBySlot] = useState<ItemsBySlot | null>(null);
   const [selectedItems, setSelectedItems] = useState<Record<string, number[]>>(
     {}
   );
-  const [iterations, setIterations] = useState(6);
   const [fightStyle, setFightStyle] = useState("Patchwerk");
-  const [targetError, setTargetError] = useState(0.1);
   const [maxUpgrade, setMaxUpgrade] = useState(false);
   const [copyEnchants, setCopyEnchants] = useState(true);
   const [threads, setThreads] = useState(0);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const prevInputRef = useRef("");
@@ -73,9 +69,9 @@ export default function TopGearPage() {
           simc_input: simcInput,
           selected_items: selectedItems,
           items_by_slot: itemsBySlot,
-          iterations: ITERATION_STEPS[iterations],
+          iterations: 10000,
           fight_style: fightStyle,
-          target_error: targetError,
+          target_error: 0.1,
           max_upgrade: maxUpgrade,
           copy_enchants: copyEnchants,
           threads,
@@ -108,6 +104,8 @@ export default function TopGearPage() {
 
       {itemsBySlot && (
         <>
+          <FightStyleSelector value={fightStyle} onChange={setFightStyle} />
+
           <div className="card p-5 flex flex-col sm:flex-row gap-4">
             <label className="flex items-center gap-3 cursor-pointer group flex-1">
               <div
@@ -162,89 +160,7 @@ export default function TopGearPage() {
             onItemsChange={setItemsBySlot}
           />
 
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-[12px] text-muted hover:text-white transition-colors flex items-center gap-1.5"
-          >
-            <svg
-              className={`w-3 h-3 transition-transform ${showAdvanced ? "rotate-90" : ""}`}
-              viewBox="0 0 16 16"
-              fill="currentColor"
-            >
-              <path d="M6 3l5 5-5 5V3z" />
-            </svg>
-            Advanced Settings
-          </button>
-
-          {showAdvanced && (
-            <div className="card p-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-[13px] font-medium text-gray-400">
-                      Iterations
-                    </label>
-                    <span className="text-xs font-mono bg-surface-2 border border-border px-2 py-0.5 rounded text-white tabular-nums">
-                      {ITERATION_STEPS[iterations].toLocaleString()}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={ITERATION_STEPS.length - 1}
-                    value={iterations}
-                    onChange={(e) => setIterations(parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-[10px] text-gray-600 mt-1">
-                    <span>100</span>
-                    <span>10,000</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[13px] font-medium text-gray-400 block mb-3">
-                    Fight Style
-                  </label>
-                  <select
-                    value={fightStyle}
-                    onChange={(e) => setFightStyle(e.target.value)}
-                    className="input-field"
-                  >
-                    <option value="Patchwerk">Patchwerk</option>
-                    <option value="HecticAddCleave">Hectic Add Cleave</option>
-                    <option value="LightMovement">Light Movement</option>
-                  </select>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-[13px] font-medium text-gray-400">
-                      Target Error
-                    </label>
-                    <span className="text-xs font-mono bg-surface-2 border border-border px-2 py-0.5 rounded text-white tabular-nums">
-                      {targetError.toFixed(1)}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0.1}
-                    max={1.0}
-                    step={0.1}
-                    value={targetError}
-                    onChange={(e) => setTargetError(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-[10px] text-gray-600 mt-1">
-                    <span>Precise</span>
-                    <span>Fast</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6">
-                <ThreadPresetSelector value={threads} onChange={setThreads} />
-              </div>
-            </div>
-          )}
+          <ThreadPresetSelector value={threads} onChange={setThreads} />
 
           {error && (
             <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">

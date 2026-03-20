@@ -195,6 +195,9 @@ async def run_simc_staged(
     remaining = combo_count
     result = None
 
+    # Collect eliminated combos' results so they appear in final output
+    eliminated: dict[str, dict] = {}
+
     stage_iterations = [
         max(100, user_iterations // 10),
         max(500, user_iterations // 2),
@@ -251,6 +254,12 @@ async def run_simc_staged(
         sorted_ps = sorted(profilesets, key=lambda p: p.get("mean", 0), reverse=True)
         keep_combos = {ps["name"] for ps in sorted_ps[:keep_count]}
 
+        # Save eliminated combos' DPS from this stage
+        for ps in sorted_ps:
+            name = ps.get("name", "")
+            if name and name not in keep_combos:
+                eliminated[name] = ps
+
         await _stage_complete(
             f"{stage['name']} · {len(profilesets)} → {len(keep_combos)} combos"
         )
@@ -262,5 +271,14 @@ async def run_simc_staged(
 
         current_input = _filter_simc_input(current_input, keep_combos)
         remaining = len(keep_combos)
+
+    # Inject eliminated combos into the final result so all combos appear
+    if eliminated and result:
+        final_results = _get_profileset_results(result)
+        final_names = {ps.get("name") for ps in final_results}
+        for name, ps in eliminated.items():
+            if name not in final_names:
+                final_results.append(ps)
+        # Write back (mutates result in place via the list reference)
 
     return result

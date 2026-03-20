@@ -1,5 +1,6 @@
 use regex::Regex;
 use serde_json::Value;
+use std::collections::HashMap;
 use std::path::Path;
 use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -380,6 +381,10 @@ pub async fn run_simc_staged(
     let mut remaining = combo_count;
     let mut result: Option<Value> = None;
 
+    // Collect eliminated combos' results so they appear in the final output.
+    // Key: combo name, Value: profileset result object from the stage where it was cut.
+    let mut eliminated: HashMap<String, Value> = HashMap::new();
+
     let stage_iterations = [
         std::cmp::max(100, user_iterations / 10),
         std::cmp::max(500, user_iterations / 2),
@@ -465,6 +470,14 @@ pub async fn run_simc_staged(
             .filter_map(|ps| ps.get("name").and_then(|n| n.as_str()).map(|s| s.to_string()))
             .collect();
 
+        // Save eliminated combos' DPS from this stage
+        for ps in &sorted_ps {
+            let name = ps.get("name").and_then(|n| n.as_str()).unwrap_or("");
+            if !name.is_empty() && !keep_combos.contains(name) {
+                eliminated.insert(name.to_string(), ps.clone());
+            }
+        }
+
         on_stage_complete(&format!("{} · {} → {} combos", stage.name, profilesets.len(), keep_combos.len()));
 
         println!(
@@ -477,6 +490,26 @@ pub async fn run_simc_staged(
 
         current_input = filter_simc_input(&current_input, &keep_combos);
         remaining = keep_combos.len();
+    }
+
+    // Inject eliminated combos into the final result so all combos appear in output.
+    if !eliminated.is_empty() {
+        if let Some(ref mut res) = result {
+            if let Some(results_arr) = res
+                .pointer_mut("/sim/profilesets/results")
+                .and_then(|v| v.as_array_mut())
+            {
+                let final_names: std::collections::HashSet<String> = results_arr
+                    .iter()
+                    .filter_map(|ps| ps.get("name").and_then(|n| n.as_str()).map(|s| s.to_string()))
+                    .collect();
+                for (name, ps) in &eliminated {
+                    if !final_names.contains(name) {
+                        results_arr.push(ps.clone());
+                    }
+                }
+            }
+        }
     }
 
     result.ok_or_else(|| "No simulation result produced".to_string())
