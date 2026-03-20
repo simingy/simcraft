@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { ItemsBySlot, ParsedItem, GEAR_SLOTS } from "../lib/parseAddonString";
-import { useItemInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
+import { useItemInfo, useEnchantInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
 import type { ItemQuery } from "../lib/useItemInfo";
 import { useWowheadTooltips } from "../lib/useWowheadTooltips";
 
@@ -63,6 +63,18 @@ export default function TopGearItemSelector({
   }, [itemsBySlot]);
 
   const itemInfoMap = useItemInfo(allItemQueries);
+
+  const allEnchantIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const items of Object.values(itemsBySlot)) {
+      for (const item of items) {
+        if (item.enchant_id > 0) ids.add(item.enchant_id);
+      }
+    }
+    return [...ids];
+  }, [itemsBySlot]);
+
+  const enchantInfoMap = useEnchantInfo(allEnchantIds);
   useWowheadTooltips([itemInfoMap]);
 
   const getIlevel = (di: DisplayItem) => {
@@ -258,7 +270,9 @@ export default function TopGearItemSelector({
                   </a>
                   <span className="flex items-center gap-1.5 shrink-0">
                     {di.item.enchant_id > 0 && (
-                      <span className="text-[9px] text-emerald-400/70">E</span>
+                      <span className="text-[9px] text-emerald-400/70 max-w-[80px] truncate" title={enchantInfoMap[di.item.enchant_id]?.name || ""}>
+                        {enchantInfoMap[di.item.enchant_id]?.name || "Enchanted"}
+                      </span>
                     )}
                     <span className="text-[10px] text-muted font-mono tabular-nums">
                       {(getIlevel(di) > 0) && getIlevel(di)}
@@ -345,7 +359,9 @@ export default function TopGearItemSelector({
                   </a>
                   <span className="flex items-center gap-1.5 shrink-0">
                     {di.item.enchant_id > 0 && (
-                      <span className="text-[9px] text-emerald-400/70">E</span>
+                      <span className="text-[9px] text-emerald-400/70 max-w-[80px] truncate" title={enchantInfoMap[di.item.enchant_id]?.name || ""}>
+                        {enchantInfoMap[di.item.enchant_id]?.name || "Enchanted"}
+                      </span>
                     )}
                     <span className="text-[10px] text-muted font-mono tabular-nums">
                       {(getIlevel(di) > 0) && getIlevel(di)}

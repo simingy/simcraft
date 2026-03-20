@@ -33,6 +33,7 @@ QUALITY_NAMES = {
 }
 
 WOWHEAD_TOOLTIP_URL = "https://nether.wowhead.com/tooltip/item/{item_id}"
+WOWHEAD_SPELL_URL = "https://nether.wowhead.com/tooltip/spell/{spell_id}"
 
 
 def _normalize_bonus(bonus_ids: list[int] | None) -> str:
@@ -180,3 +181,25 @@ async def get_item_info_batch(
                 results[resp_key] = _fallback(iid)
 
     return results
+
+
+@router.get("/api/enchant-info/{enchant_id}")
+async def get_enchant_info(enchant_id: int, request: Request):
+    """Fetch enchant name and icon from Wowhead's spell tooltip API."""
+    if enchant_id <= 0:
+        return {"enchant_id": enchant_id, "name": "", "icon": ""}
+
+    try:
+        client = request.app.state.http_client
+        url = WOWHEAD_SPELL_URL.format(spell_id=enchant_id)
+        resp = await client.get(url, params={"dataEnv": 1, "locale": 0})
+        resp.raise_for_status()
+        data = resp.json()
+        return {
+            "enchant_id": enchant_id,
+            "name": data.get("name", ""),
+            "icon": data.get("icon", ""),
+        }
+    except Exception as e:
+        logger.warning(f"Failed to fetch enchant {enchant_id}: {e}")
+        return {"enchant_id": enchant_id, "name": "", "icon": ""}

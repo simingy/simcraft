@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useItemInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
-import type { ItemInfo, ItemQuery } from "../lib/useItemInfo";
+import { useItemInfo, useEnchantInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
+import type { ItemInfo, EnchantInfo, ItemQuery } from "../lib/useItemInfo";
 import { SLOT_LABELS } from "../lib/parseAddonString";
 import { useWowheadTooltips } from "../lib/useWowheadTooltips";
 
@@ -56,6 +56,18 @@ export default function TopGearResults({
   }, [results]);
 
   const itemInfoMap = useItemInfo(allItemQueries);
+
+  const allEnchantIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const r of results) {
+      for (const it of r.items) {
+        if (it.enchant_id && it.enchant_id > 0) ids.add(it.enchant_id);
+      }
+    }
+    return [...ids];
+  }, [results]);
+
+  const enchantInfoMap = useEnchantInfo(allEnchantIds);
   useWowheadTooltips([itemInfoMap]);
 
   return (
@@ -85,6 +97,7 @@ export default function TopGearResults({
                   key={i}
                   item={it}
                   info={it.item_id > 0 ? itemInfoMap[it.item_id] : undefined}
+                  enchant={it.enchant_id ? enchantInfoMap[it.enchant_id] : undefined}
                 />
               ))}
             </div>
@@ -157,6 +170,7 @@ export default function TopGearResults({
                                 ? itemInfoMap[it.item_id]
                                 : undefined
                             }
+                            enchant={it.enchant_id ? enchantInfoMap[it.enchant_id] : undefined}
                           />
                         ))}
                       </div>
@@ -198,7 +212,7 @@ export default function TopGearResults({
   );
 }
 
-function ItemTag({ item, info }: { item: ResultItem; info?: ItemInfo }) {
+function ItemTag({ item, info, enchant }: { item: ResultItem; info?: ItemInfo; enchant?: EnchantInfo }) {
   const qc = info ? QUALITY_COLORS[info.quality] || "#fff" : "#fff";
   const name = info?.name || item.name || `Item ${item.item_id}`;
   const icon = info?.icon || "inv_misc_questionmark";
@@ -233,11 +247,16 @@ function ItemTag({ item, info }: { item: ResultItem; info?: ItemInfo }) {
       >
         {name}
       </a>
+      {enchant?.name && (
+        <span className="text-[9px] text-emerald-400/70 truncate max-w-[70px]" title={enchant.name}>
+          {enchant.name}
+        </span>
+      )}
     </div>
   );
 }
 
-function ItemChip({ item, info }: { item: ResultItem; info?: ItemInfo }) {
+function ItemChip({ item, info, enchant }: { item: ResultItem; info?: ItemInfo; enchant?: EnchantInfo }) {
   const qc = info ? QUALITY_COLORS[info.quality] || "#fff" : "#fff";
   const name = info?.name || item.name || `Item ${item.item_id}`;
   const icon = info?.icon || "inv_misc_questionmark";
@@ -276,6 +295,7 @@ function ItemChip({ item, info }: { item: ResultItem; info?: ItemInfo }) {
         <p className="text-[9px] text-muted">
           {SLOT_LABELS[item.slot] || item.slot}
           {item.ilevel > 0 && ` · ${item.ilevel}`}
+          {enchant?.name && <span className="text-emerald-400/70"> · {enchant.name}</span>}
           {kept && " · kept"}
         </p>
       </div>

@@ -103,6 +103,62 @@ export function useItemInfo(queries: ItemQuery[]): Record<number, ItemInfo> {
   return items;
 }
 
+export interface EnchantInfo {
+  enchant_id: number;
+  name: string;
+  icon: string;
+}
+
+const enchantCache: Record<number, EnchantInfo> = {};
+
+export function useEnchantInfo(enchantIds: number[]): Record<number, EnchantInfo> {
+  const [enchants, setEnchants] = useState<Record<number, EnchantInfo>>({});
+
+  const depKey = enchantIds.filter((id) => id > 0).sort().join(",");
+
+  useEffect(() => {
+    const unique = new Set(enchantIds.filter((id) => id > 0));
+    if (unique.size === 0) return;
+
+    const cached: Record<number, EnchantInfo> = {};
+    const toFetch: number[] = [];
+    for (const id of unique) {
+      if (enchantCache[id]) {
+        cached[id] = enchantCache[id];
+      } else {
+        toFetch.push(id);
+      }
+    }
+
+    if (Object.keys(cached).length > 0) {
+      setEnchants((prev) => ({ ...prev, ...cached }));
+    }
+
+    if (toFetch.length === 0) return;
+
+    let cancelled = false;
+
+    for (const id of toFetch) {
+      (async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/enchant-info/${id}`);
+          if (!res.ok || cancelled) return;
+          const info: EnchantInfo = await res.json();
+          if (cancelled || !info.name) return;
+          enchantCache[id] = info;
+          setEnchants((prev) => ({ ...prev, [id]: info }));
+        } catch {
+          // Silently fail
+        }
+      })();
+    }
+
+    return () => { cancelled = true; };
+  }, [depKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return enchants;
+}
+
 export function getIconUrl(iconName: string): string {
   return `https://wow.zamimg.com/images/wow/icons/medium/${iconName}.jpg`;
 }
