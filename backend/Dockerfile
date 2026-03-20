@@ -23,4 +23,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Download Raidbots game data files
+RUN mkdir -p data && cd data \
+    && curl -sL -o enchantments.json https://www.raidbots.com/static/data/live/enchantments.json \
+    && curl -sL -o bonuses.json https://www.raidbots.com/static/data/live/bonuses.json \
+    && curl -sL -o equippable-items-full.json https://www.raidbots.com/static/data/live/equippable-items-full.json \
+    && curl -sL -o item-curves.json https://www.raidbots.com/static/data/live/item-curves.json \
+    && curl -sL -o item-names.json https://www.raidbots.com/static/data/live/item-names.json
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

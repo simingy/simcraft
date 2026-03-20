@@ -22,7 +22,7 @@ export default function TopGearPage() {
   );
   const [iterations, setIterations] = useState(3);
   const [fightStyle, setFightStyle] = useState("Patchwerk");
-  const [targetError, setTargetError] = useState(0.5);
+  const [targetError, setTargetError] = useState(0.1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const prevInputRef = useRef("");

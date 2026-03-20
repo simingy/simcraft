@@ -12,7 +12,7 @@ export default function SimForm() {
   const [simcInput, setSimcInput] = useState("");
   const [iterations, setIterations] = useState(3);
   const [fightStyle, setFightStyle] = useState("Patchwerk");
-  const [targetError, setTargetError] = useState(0.2);
+  const [targetError, setTargetError] = useState(0.1);
   const [simType, setSimType] = useState<"quick" | "stat_weights">("quick");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");

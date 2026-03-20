@@ -27,7 +27,7 @@ class SimRequest(BaseModel):
         le=settings.MAX_ITERATIONS,
     )
     fight_style: FightStyle = FightStyle.PATCHWERK
-    target_error: float = Field(default=0.2, ge=0.1, le=1.0)
+    target_error: float = Field(default=0.1, ge=0.1, le=1.0)
     sim_type: SimType = SimType.QUICK
 
 
@@ -46,7 +46,7 @@ class TopGearRequest(BaseModel):
         le=settings.MAX_ITERATIONS,
     )
     fight_style: FightStyle = FightStyle.PATCHWERK
-    target_error: float = Field(default=0.2, ge=0.1, le=1.0)
+    target_error: float = Field(default=0.1, ge=0.1, le=1.0)
 
 
 class ItemInfoRequest(BaseModel):

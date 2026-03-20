@@ -120,6 +120,10 @@ def _extract_baseline_gear(player: dict) -> dict[str, dict]:
         enchant_match = re.search(r"enchant_id=(\d+)", encoded)
         if enchant_match:
             enchant_id = int(enchant_match.group(1))
+        gem_id = 0
+        gem_match = re.search(r"gem_id=(\d+)", encoded)
+        if gem_match:
+            gem_id = int(gem_match.group(1))
         name = data.get("name", "").replace("_", " ").title()
         baseline[slot] = {
             "slot": slot,
@@ -128,6 +132,7 @@ def _extract_baseline_gear(player: dict) -> dict[str, dict]:
             "name": name,
             "bonus_ids": bonus_ids,
             "enchant_id": enchant_id,
+            "gem_id": gem_id,
             "is_kept": True,
         }
     return baseline

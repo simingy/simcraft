@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useItemInfo, useEnchantInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
-import type { ItemInfo, EnchantInfo, ItemQuery } from "../lib/useItemInfo";
+import { useItemInfo, useEnchantInfo, useGemInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
+import type { ItemInfo, EnchantInfo, GemInfo, ItemQuery } from "../lib/useItemInfo";
 import { SLOT_LABELS } from "../lib/parseAddonString";
 import { useWowheadTooltips } from "../lib/useWowheadTooltips";
 
@@ -13,6 +13,7 @@ interface ResultItem {
   name: string;
   bonus_ids?: number[];
   enchant_id?: number;
+  gem_id?: number;
   is_kept?: boolean;
 }
 
@@ -68,6 +69,18 @@ export default function TopGearResults({
   }, [results]);
 
   const enchantInfoMap = useEnchantInfo(allEnchantIds);
+
+  const allGemIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const r of results) {
+      for (const it of r.items) {
+        if (it.gem_id && it.gem_id > 0) ids.add(it.gem_id);
+      }
+    }
+    return [...ids];
+  }, [results]);
+
+  const gemInfoMap = useGemInfo(allGemIds);
   useWowheadTooltips([itemInfoMap]);
 
   return (
@@ -98,6 +111,7 @@ export default function TopGearResults({
                   item={it}
                   info={it.item_id > 0 ? itemInfoMap[it.item_id] : undefined}
                   enchant={it.enchant_id ? enchantInfoMap[it.enchant_id] : undefined}
+                  gem={it.gem_id ? gemInfoMap[it.gem_id] : undefined}
                 />
               ))}
             </div>
@@ -171,6 +185,7 @@ export default function TopGearResults({
                                 : undefined
                             }
                             enchant={it.enchant_id ? enchantInfoMap[it.enchant_id] : undefined}
+                            gem={it.gem_id ? gemInfoMap[it.gem_id] : undefined}
                           />
                         ))}
                       </div>
@@ -212,12 +227,12 @@ export default function TopGearResults({
   );
 }
 
-function ItemTag({ item, info, enchant }: { item: ResultItem; info?: ItemInfo; enchant?: EnchantInfo }) {
+function ItemTag({ item, info, enchant, gem }: { item: ResultItem; info?: ItemInfo; enchant?: EnchantInfo; gem?: GemInfo }) {
   const qc = info ? QUALITY_COLORS[info.quality] || "#fff" : "#fff";
   const name = info?.name || item.name || `Item ${item.item_id}`;
   const icon = info?.icon || "inv_misc_questionmark";
   const kept = item.is_kept;
-  const whData = item.item_id > 0 ? getWowheadData(item.bonus_ids, item.ilevel, item.enchant_id) : undefined;
+  const whData = item.item_id > 0 ? getWowheadData(item.bonus_ids, item.ilevel, item.enchant_id, item.gem_id) : undefined;
 
   return (
     <div
@@ -256,12 +271,12 @@ function ItemTag({ item, info, enchant }: { item: ResultItem; info?: ItemInfo; e
   );
 }
 
-function ItemChip({ item, info, enchant }: { item: ResultItem; info?: ItemInfo; enchant?: EnchantInfo }) {
+function ItemChip({ item, info, enchant, gem }: { item: ResultItem; info?: ItemInfo; enchant?: EnchantInfo; gem?: GemInfo }) {
   const qc = info ? QUALITY_COLORS[info.quality] || "#fff" : "#fff";
   const name = info?.name || item.name || `Item ${item.item_id}`;
   const icon = info?.icon || "inv_misc_questionmark";
   const kept = item.is_kept;
-  const whData = item.item_id > 0 ? getWowheadData(item.bonus_ids, item.ilevel, item.enchant_id) : undefined;
+  const whData = item.item_id > 0 ? getWowheadData(item.bonus_ids, item.ilevel, item.enchant_id, item.gem_id) : undefined;
 
   return (
     <div
@@ -295,6 +310,9 @@ function ItemChip({ item, info, enchant }: { item: ResultItem; info?: ItemInfo; 
         <p className="text-[9px] text-muted">
           {SLOT_LABELS[item.slot] || item.slot}
           {item.ilevel > 0 && ` · ${item.ilevel}`}
+          {info?.tag && ` · ${info.tag}`}
+          {info?.upgrade && ` · ${info.upgrade}`}
+          {gem?.name ? <span className="text-sky-400/70"> · {gem.name}</span> : info?.sockets && info.sockets > 0 && <span className="text-sky-400/70"> · Socket</span>}
           {enchant?.name && <span className="text-emerald-400/70"> · {enchant.name}</span>}
           {kept && " · kept"}
         </p>

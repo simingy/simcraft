@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import init_db
 from routers import health, items, sim
+from services import game_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up...")
+    game_data.load()
     await init_db(drop_all=settings.DROP_DB_ON_STARTUP)
     logger.info("Database initialized")
 

@@ -6,6 +6,7 @@ export interface ParsedItem {
   name: string;
   bonus_ids: number[];
   enchant_id: number;
+  gem_id: number;
   is_equipped: boolean;
 }
 
@@ -45,6 +46,7 @@ function parseItemProps(itemStr: string): Omit<ParsedItem, "slot" | "is_equipped
   const encMatch = itemStr.match(/^([a-z_]+),/);
   const bonusMatch = itemStr.match(/bonus_id=([0-9/:]+)/);
   const enchantMatch = itemStr.match(/enchant_id=(\d+)/);
+  const gemMatch = itemStr.match(/gem_id=(\d+)/);
 
   let name = "";
   if (nameMatch) {
@@ -64,6 +66,7 @@ function parseItemProps(itemStr: string): Omit<ParsedItem, "slot" | "is_equipped
     name,
     bonus_ids,
     enchant_id: enchantMatch ? parseInt(enchantMatch[1]) : 0,
+    gem_id: gemMatch ? parseInt(gemMatch[1]) : 0,
   };
 }
 

@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { ItemsBySlot, ParsedItem, GEAR_SLOTS } from "../lib/parseAddonString";
-import { useItemInfo, useEnchantInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
-import type { ItemQuery } from "../lib/useItemInfo";
+import { useItemInfo, useEnchantInfo, useGemInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
+import type { ItemQuery, ItemInfo, EnchantInfo, GemInfo } from "../lib/useItemInfo";
 import { useWowheadTooltips } from "../lib/useWowheadTooltips";
 
 interface TopGearItemSelectorProps {
@@ -75,6 +75,18 @@ export default function TopGearItemSelector({
   }, [itemsBySlot]);
 
   const enchantInfoMap = useEnchantInfo(allEnchantIds);
+
+  const allGemIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const items of Object.values(itemsBySlot)) {
+      for (const item of items) {
+        if (item.gem_id > 0) ids.add(item.gem_id);
+      }
+    }
+    return [...ids];
+  }, [itemsBySlot]);
+
+  const gemInfoMap = useGemInfo(allGemIds);
   useWowheadTooltips([itemInfoMap]);
 
   const getIlevel = (di: DisplayItem) => {
@@ -257,27 +269,14 @@ export default function TopGearItemSelector({
                       loading="lazy"
                     />
                   </div>
-                  <a
-                    href={di.item.item_id > 0 ? getWowheadUrl(di.item.item_id) : undefined}
-                    data-wowhead={di.item.item_id > 0 ? getWowheadData(di.item.bonus_ids, di.item.ilevel, di.item.enchant_id) : undefined}
-                    className="text-[12px] truncate flex-1 no-underline"
-                    style={{ color: qc }}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    {name}
-                  </a>
-                  <span className="flex items-center gap-1.5 shrink-0">
-                    {di.item.enchant_id > 0 && (
-                      <span className="text-[9px] text-emerald-400/70 max-w-[80px] truncate" title={enchantInfoMap[di.item.enchant_id]?.name || ""}>
-                        {enchantInfoMap[di.item.enchant_id]?.name || "Enchanted"}
-                      </span>
-                    )}
-                    <span className="text-[10px] text-muted font-mono tabular-nums">
-                      {(getIlevel(di) > 0) && getIlevel(di)}
-                    </span>
-                  </span>
+                  <ItemDetails
+                    di={di}
+                    info={info}
+                    enchant={di.item.enchant_id > 0 ? enchantInfoMap[di.item.enchant_id] : undefined}
+                    gem={di.item.gem_id > 0 ? gemInfoMap[di.item.gem_id] : undefined}
+                    qc={qc}
+                    name={name}
+                  />
                 </div>
               );
             })}
@@ -346,27 +345,14 @@ export default function TopGearItemSelector({
                       loading="lazy"
                     />
                   </div>
-                  <a
-                    href={di.item.item_id > 0 ? getWowheadUrl(di.item.item_id) : undefined}
-                    data-wowhead={di.item.item_id > 0 ? getWowheadData(di.item.bonus_ids, di.item.ilevel, di.item.enchant_id) : undefined}
-                    className="text-[12px] truncate flex-1 no-underline"
-                    style={{ color: qc }}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    {name}
-                  </a>
-                  <span className="flex items-center gap-1.5 shrink-0">
-                    {di.item.enchant_id > 0 && (
-                      <span className="text-[9px] text-emerald-400/70 max-w-[80px] truncate" title={enchantInfoMap[di.item.enchant_id]?.name || ""}>
-                        {enchantInfoMap[di.item.enchant_id]?.name || "Enchanted"}
-                      </span>
-                    )}
-                    <span className="text-[10px] text-muted font-mono tabular-nums">
-                      {(getIlevel(di) > 0) && getIlevel(di)}
-                    </span>
-                  </span>
+                  <ItemDetails
+                    di={di}
+                    info={info}
+                    enchant={di.item.enchant_id > 0 ? enchantInfoMap[di.item.enchant_id] : undefined}
+                    gem={di.item.gem_id > 0 ? gemInfoMap[di.item.gem_id] : undefined}
+                    qc={qc}
+                    name={name}
+                  />
                 </label>
               );
             })}
@@ -374,6 +360,69 @@ export default function TopGearItemSelector({
         ))}
       </div>
     </div>
+  );
+}
+
+function ItemDetails({
+  di,
+  info,
+  enchant,
+  gem,
+  qc,
+  name,
+}: {
+  di: DisplayItem;
+  info: ItemInfo | null;
+  enchant?: EnchantInfo;
+  gem?: GemInfo;
+  qc: string;
+  name: string;
+}) {
+  const ilevel = di.item.ilevel || info?.ilevel || 0;
+  const tag = info?.tag;
+  const upgrade = info?.upgrade;
+  const sockets = info?.sockets;
+
+  // Build subtitle parts
+  const parts: { text: string; color?: string }[] = [];
+  if (tag) parts.push({ text: tag });
+  if (upgrade) parts.push({ text: upgrade });
+  if (gem?.name) {
+    parts.push({ text: gem.name, color: "text-sky-400/70" });
+  } else if (sockets && sockets > 0) {
+    parts.push({ text: `${sockets > 1 ? sockets + " " : ""}Socket${sockets > 1 ? "s" : ""}`, color: "text-sky-400/70" });
+  }
+  if (enchant?.name) parts.push({ text: enchant.name, color: "text-emerald-400/70" });
+
+  return (
+    <>
+      <div className="flex-1 min-w-0">
+        <a
+          href={di.item.item_id > 0 ? getWowheadUrl(di.item.item_id) : undefined}
+          data-wowhead={di.item.item_id > 0 ? getWowheadData(di.item.bonus_ids, di.item.ilevel, di.item.enchant_id, di.item.gem_id) : undefined}
+          className="text-[12px] truncate block no-underline"
+          style={{ color: qc }}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.preventDefault()}
+        >
+          {name}
+        </a>
+        {parts.length > 0 && (
+          <span className="text-[9px] text-muted truncate block">
+            {parts.map((p, i) => (
+              <span key={i}>
+                {i > 0 && <span className="opacity-40"> · </span>}
+                <span className={p.color || ""}>{p.text}</span>
+              </span>
+            ))}
+          </span>
+        )}
+      </div>
+      <span className="text-[10px] text-muted font-mono tabular-nums shrink-0">
+        {ilevel > 0 && ilevel}
+      </span>
+    </>
   );
 }
 

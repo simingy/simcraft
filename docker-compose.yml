@@ -10,12 +10,12 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - SIMC_PATH=/usr/local/bin/simc
-      - DATABASE_URL=sqlite+aiosqlite:///./data/raidbots.db
+      - DATABASE_URL=sqlite+aiosqlite:///./db/raidbots.db
       - CORS_ORIGINS=["*"]
     depends_on:
       - redis
     volumes:
-      - backend-data:/app/data
+      - backend-db:/app/db
     restart: unless-stopped
 
   worker:
@@ -24,11 +24,11 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - SIMC_PATH=/usr/local/bin/simc
-      - DATABASE_URL=sqlite+aiosqlite:///./data/raidbots.db
+      - DATABASE_URL=sqlite+aiosqlite:///./db/raidbots.db
     depends_on:
       - redis
     volumes:
-      - backend-data:/app/data
+      - backend-db:/app/db
     restart: unless-stopped
 
   frontend:
@@ -43,4 +43,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  backend-data:
+  backend-db:

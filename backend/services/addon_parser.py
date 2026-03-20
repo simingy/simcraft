@@ -34,7 +34,7 @@ _PAIRED_SLOTS = {
 
 def _parse_item_props(item_str: str) -> dict[str, Any]:
     """Extract item_id, ilevel, bonus_id, enchant, gem from an item string."""
-    props: dict[str, Any] = {"item_id": 0, "ilevel": 0, "name": "", "bonus_ids": [], "enchant_id": 0}
+    props: dict[str, Any] = {"item_id": 0, "ilevel": 0, "name": "", "bonus_ids": [], "enchant_id": 0, "gem_id": 0}
 
     id_match = re.search(r"id=(\d+)", item_str)
     if id_match:
@@ -53,6 +53,10 @@ def _parse_item_props(item_str: str) -> dict[str, Any]:
     enchant_match = re.search(r"enchant_id=(\d+)", item_str)
     if enchant_match:
         props["enchant_id"] = int(enchant_match.group(1))
+
+    gem_match = re.search(r"gem_id=(\d+)", item_str)
+    if gem_match:
+        props["gem_id"] = int(gem_match.group(1))
 
     name_match = re.search(r"name=([^,]+)", item_str)
     if name_match:

@@ -241,6 +241,7 @@ def _item_meta(item: dict[str, Any], slot: str) -> dict[str, Any]:
         "name": item.get("name", ""),
         "bonus_ids": item.get("bonus_ids", []),
         "enchant_id": item.get("enchant_id", 0),
+        "gem_id": item.get("gem_id", 0),
         "is_kept": item.get("is_equipped", False),
     }
 

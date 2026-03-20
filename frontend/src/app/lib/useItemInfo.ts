@@ -14,6 +14,9 @@ export interface ItemInfo {
   quality_name: string;
   icon: string;
   ilevel: number;
+  tag?: string;
+  sockets?: number;
+  upgrade?: string;
 }
 
 // Module-level cache so it persists across renders/components
@@ -106,7 +109,6 @@ export function useItemInfo(queries: ItemQuery[]): Record<number, ItemInfo> {
 export interface EnchantInfo {
   enchant_id: number;
   name: string;
-  icon: string;
 }
 
 const enchantCache: Record<number, EnchantInfo> = {};
@@ -159,6 +161,63 @@ export function useEnchantInfo(enchantIds: number[]): Record<number, EnchantInfo
   return enchants;
 }
 
+export interface GemInfo {
+  gem_id: number;
+  name: string;
+  icon: string;
+  quality: number;
+}
+
+const gemCache: Record<number, GemInfo> = {};
+
+export function useGemInfo(gemIds: number[]): Record<number, GemInfo> {
+  const [gems, setGems] = useState<Record<number, GemInfo>>({});
+
+  const depKey = gemIds.filter((id) => id > 0).sort().join(",");
+
+  useEffect(() => {
+    const unique = new Set(gemIds.filter((id) => id > 0));
+    if (unique.size === 0) return;
+
+    const cached: Record<number, GemInfo> = {};
+    const toFetch: number[] = [];
+    for (const id of unique) {
+      if (gemCache[id]) {
+        cached[id] = gemCache[id];
+      } else {
+        toFetch.push(id);
+      }
+    }
+
+    if (Object.keys(cached).length > 0) {
+      setGems((prev) => ({ ...prev, ...cached }));
+    }
+
+    if (toFetch.length === 0) return;
+
+    let cancelled = false;
+
+    for (const id of toFetch) {
+      (async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/gem-info/${id}`);
+          if (!res.ok || cancelled) return;
+          const info: GemInfo = await res.json();
+          if (cancelled || !info.name) return;
+          gemCache[id] = info;
+          setGems((prev) => ({ ...prev, [id]: info }));
+        } catch {
+          // Silently fail
+        }
+      })();
+    }
+
+    return () => { cancelled = true; };
+  }, [depKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return gems;
+}
+
 export function getIconUrl(iconName: string): string {
   return `https://wow.zamimg.com/images/wow/icons/medium/${iconName}.jpg`;
 }
@@ -167,7 +226,7 @@ export function getWowheadUrl(itemId: number): string {
   return `https://www.wowhead.com/item=${itemId}`;
 }
 
-export function getWowheadData(bonusIds?: number[], ilevel?: number, enchantId?: number): string {
+export function getWowheadData(bonusIds?: number[], ilevel?: number, enchantId?: number, gemId?: number): string {
   const parts: string[] = [];
   if (bonusIds && bonusIds.length > 0) {
     parts.push(`bonus=${bonusIds.join(":")}`);
@@ -177,6 +236,9 @@ export function getWowheadData(bonusIds?: number[], ilevel?: number, enchantId?:
   }
   if (enchantId && enchantId > 0) {
     parts.push(`ench=${enchantId}`);
+  }
+  if (gemId && gemId > 0) {
+    parts.push(`gems=${gemId}`);
   }
   return parts.join("&");
 }

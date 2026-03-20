@@ -19,3 +19,6 @@ Thumbs.db
 *.tsbuildinfo
 
 .claude/
+
+# Game data files (downloaded at build time)
+backend/data/*.json

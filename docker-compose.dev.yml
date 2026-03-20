@@ -11,13 +11,13 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - SIMC_PATH=/usr/local/bin/simc
-      - DATABASE_URL=sqlite+aiosqlite:///./data/raidbots.db
+      - DATABASE_URL=sqlite+aiosqlite:///./db/raidbots.db
       - DROP_DB_ON_STARTUP=true
     depends_on:
       - redis
     volumes:
       - ./backend:/app
-      - backend-data:/app/data
+      - backend-db:/app/db
 
   worker:
     build: ./backend
@@ -25,12 +25,12 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - SIMC_PATH=/usr/local/bin/simc
-      - DATABASE_URL=sqlite+aiosqlite:///./data/raidbots.db
+      - DATABASE_URL=sqlite+aiosqlite:///./db/raidbots.db
     depends_on:
       - redis
     volumes:
       - ./backend:/app
-      - backend-data:/app/data
+      - backend-db:/app/db
 
   frontend:
     build: ./frontend
@@ -42,4 +42,4 @@ services:
       - backend
 
 volumes:
-  backend-data:
+  backend-db:
