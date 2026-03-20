@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import NavTabs from "./components/NavTabs";
+import SimTypeCards from "./components/SimTypeCards";
 import SystemInfo from "./components/SystemInfo";
 import "./globals.css";
 
@@ -39,9 +39,8 @@ export default function RootLayout({
                 SimHammer
               </span>
             </a>
-            <SystemInfo />
             <div className="flex items-center gap-3">
-              <NavTabs />
+              <SystemInfo />
               <a
                 href="https://github.com/sortbek/simcraft/releases/latest"
                 target="_blank"
@@ -56,7 +55,10 @@ export default function RootLayout({
             </div>
           </div>
         </header>
-        <main className="max-w-5xl mx-auto px-6 py-10">{children}</main>
+        <main className="max-w-5xl mx-auto px-6 py-10">
+          <SimTypeCards />
+          {children}
+        </main>
       </body>
     </html>
   );

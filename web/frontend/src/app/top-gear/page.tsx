@@ -95,15 +95,6 @@ export default function TopGearPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-xl font-semibold text-white tracking-tight">
-          Top Gear
-        </h2>
-        <p className="text-sm text-muted mt-1">
-          Find your best gear combination from bags, bank, and vault.
-        </p>
-      </div>
-
       <div className="card p-5">
         <label className="label-text">SimC Addon Export</label>
         <textarea
