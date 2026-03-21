@@ -73,6 +73,35 @@ function parseItemProps(itemStr: string): Omit<ParsedItem, "slot" | "is_equipped
 // Matches comment lines like "# Emberwing Feather (246)"
 const ITEM_HEADER_REGEX = /^#+\s*(.+?)\s*\((\d+)\)\s*$/;
 
+const CLASS_RE = /^(warrior|paladin|hunter|rogue|priest|death_knight|deathknight|shaman|mage|warlock|monk|demon_hunter|demonhunter|druid|evoker)\s*=/;
+
+// Max armor subclass each class can wear (classes can wear their type and lighter)
+const CLASS_MAX_ARMOR: Record<string, number> = {
+  priest: 1, mage: 1, warlock: 1,
+  rogue: 2, monk: 2, druid: 2, demon_hunter: 2, demonhunter: 2,
+  hunter: 3, shaman: 3, evoker: 3,
+  warrior: 4, paladin: 4, death_knight: 4, deathknight: 4,
+};
+
+const ARMOR_SLOTS = new Set([
+  "head", "shoulder", "chest", "wrist", "hands", "waist", "legs", "feet",
+]);
+
+/** Detect character class from simc input. */
+export function detectClass(simcInput: string): string | null {
+  for (const line of simcInput.split("\n")) {
+    const m = line.trim().match(CLASS_RE);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/** Max armor subclass the class can equip, or null if unknown. */
+export function classMaxArmor(className: string | null): number | null {
+  if (!className) return null;
+  return CLASS_MAX_ARMOR[className] ?? null;
+}
+
 export function parseAddonString(simcInput: string): ItemsBySlot {
   const equipped: Record<string, ParsedItem> = {};
   const bagItems: Record<string, ParsedItem[]> = {};

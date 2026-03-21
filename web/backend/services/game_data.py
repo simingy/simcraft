@@ -106,6 +106,19 @@ QUALITY_NAMES = {
 }
 
 
+def get_item_armor_subclass(item_id: int) -> int | None:
+    """Returns the armor subclass: 0=Misc, 1=Cloth, 2=Leather, 3=Mail, 4=Plate.
+
+    Returns None if not found or not armor (itemClass != 4).
+    """
+    item = _items.get(item_id)
+    if not item:
+        return None
+    if item.get("itemClass") != 4:
+        return None
+    return item.get("itemSubClass")
+
+
 def get_item_info(item_id: int, bonus_ids: list[int] | None = None) -> dict[str, Any] | None:
     """Get full item info dict ready for API response, or None if not found.
 
@@ -130,6 +143,8 @@ def get_item_info(item_id: int, bonus_ids: list[int] | None = None) -> dict[str,
         sockets = resolved.get("sockets", 0)
         upgrade = resolved.get("upgrade", "")
 
+    armor_subclass = item.get("itemSubClass", 0) if item.get("itemClass") == 4 else 0
+
     return {
         "item_id": item_id,
         "name": item.get("name", f"Item {item_id}"),
@@ -140,6 +155,7 @@ def get_item_info(item_id: int, bonus_ids: list[int] | None = None) -> dict[str,
         "tag": tag,
         "sockets": sockets,
         "upgrade": upgrade,
+        "armor_subclass": armor_subclass,
     }
 
 

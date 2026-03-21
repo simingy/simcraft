@@ -16,6 +16,7 @@ export interface ItemInfo {
   tag?: string;
   sockets?: number;
   upgrade?: string;
+  armor_subclass?: number; // 0=Misc, 1=Cloth, 2=Leather, 3=Mail, 4=Plate
 }
 
 // Module-level cache so it persists across renders/components

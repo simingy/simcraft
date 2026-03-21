@@ -16,12 +16,17 @@ interface UpgradeOption {
   itemLevel: number;
 }
 
+const ARMOR_SLOTS = new Set([
+  "head", "shoulder", "chest", "wrist", "hands", "waist", "legs", "feet",
+]);
+
 interface TopGearItemSelectorProps {
   itemsBySlot: ItemsBySlot;
   selectedItems: Record<string, number[]>;
   onSelectionChange: (selected: Record<string, number[]>) => void;
   onItemsChange: (items: ItemsBySlot) => void;
   maxUpgrade?: boolean;
+  maxArmorSubclass?: number | null;
 }
 
 interface DisplayGroup {
@@ -59,6 +64,7 @@ export default function TopGearItemSelector({
   onSelectionChange,
   onItemsChange,
   maxUpgrade,
+  maxArmorSubclass,
 }: TopGearItemSelectorProps) {
   const [upgradeMenuFor, setUpgradeMenuFor] = useState<string | null>(null);
   const [upgradeOptions, setUpgradeOptions] = useState<UpgradeOption[]>([]);
@@ -227,6 +233,12 @@ export default function TopGearItemSelector({
           } else {
             const key = `${item.item_id}:${[...item.bonus_ids].sort((a, b) => a - b).join(",")}`;
             if (seenAltKeys.has(key)) continue;
+            // Filter by armor type compatibility
+            if (maxArmorSubclass != null && ARMOR_SLOTS.has(slot)) {
+              const info = item.item_id > 0 ? itemInfoMap[item.item_id] : null;
+              const sub = info?.armor_subclass;
+              if (sub != null && sub > 0 && sub > maxArmorSubclass) continue;
+            }
             seenAltKeys.add(key);
             alternatives.push({ item, slot, index: idx });
           }
@@ -239,7 +251,7 @@ export default function TopGearItemSelector({
       }
     }
     return result;
-  }, [itemsBySlot, itemInfoMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [itemsBySlot, itemInfoMap, maxArmorSubclass]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleItem(displayItem: DisplayItem, group: DisplayGroup) {
     const updated = { ...selectedItems };

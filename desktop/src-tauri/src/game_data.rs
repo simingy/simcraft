@@ -190,6 +190,12 @@ pub fn get_item_info(item_id: u64, bonus_ids: Option<&[u64]>) -> Option<Value> {
         }
     }
 
+    let armor_subclass = if item.get("itemClass").and_then(|c| c.as_u64()) == Some(4) {
+        item.get("itemSubClass").and_then(|s| s.as_u64()).unwrap_or(0)
+    } else {
+        0
+    };
+
     Some(serde_json::json!({
         "item_id": item_id,
         "name": item.get("name").and_then(|n| n.as_str()).unwrap_or("Unknown"),
@@ -200,6 +206,7 @@ pub fn get_item_info(item_id: u64, bonus_ids: Option<&[u64]>) -> Option<Value> {
         "tag": tag,
         "sockets": sockets,
         "upgrade": upgrade,
+        "armor_subclass": armor_subclass,
     }))
 }
 
@@ -235,6 +242,17 @@ pub fn get_gem_info(gem_item_id: u64) -> Option<Value> {
         "icon": icon,
         "quality": quality,
     }))
+}
+
+/// Returns the item's armor subclass: 0=Misc, 1=Cloth, 2=Leather, 3=Mail, 4=Plate.
+/// Returns None if the item is not found or is not armor (itemClass != 4).
+pub fn get_item_armor_subclass(item_id: u64) -> Option<u64> {
+    let item = items().get(&item_id)?;
+    let item_class = item.get("itemClass")?.as_u64()?;
+    if item_class != 4 {
+        return None; // Not armor
+    }
+    item.get("itemSubClass")?.as_u64()
 }
 
 pub fn get_upgrade_options(bonus_ids: &[u64]) -> Option<Vec<Value>> {

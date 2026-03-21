@@ -7,6 +7,8 @@ import {
   ItemsBySlot,
   GEAR_SLOTS,
   parseAddonString,
+  detectClass,
+  classMaxArmor,
 } from "../lib/parseAddonString";
 import { API_URL } from "../lib/api";
 
@@ -149,6 +151,7 @@ export default function TopGearPage() {
         onSelectionChange={setSelectedItems}
         onItemsChange={setItemsBySlot}
         maxUpgrade={maxUpgrade}
+        maxArmorSubclass={classMaxArmor(detectClass(simcInput))}
       />
 
       {error && (

@@ -3,6 +3,41 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 
 use crate::addon_parser::GEAR_SLOTS;
+use crate::game_data;
+
+/// Armor-type-restricted slots (head, shoulder, chest, wrist, hands, waist, legs, feet).
+/// Slots like neck, back, finger, trinket, and weapons are NOT armor-type restricted.
+const ARMOR_SLOTS: &[&str] = &[
+    "head", "shoulder", "chest", "wrist", "hands", "waist", "legs", "feet",
+];
+
+/// Returns the maximum armor subclass for a given WoW class name.
+/// 1=Cloth, 2=Leather, 3=Mail, 4=Plate.
+/// Classes can wear their type and anything lighter (e.g. Mail can also wear Leather/Cloth).
+fn class_max_armor_subclass(class_name: &str) -> Option<u64> {
+    match class_name.to_lowercase().as_str() {
+        "priest" | "mage" | "warlock" => Some(1),
+        "rogue" | "monk" | "druid" | "demon_hunter" | "demonhunter" => Some(2),
+        "hunter" | "shaman" | "evoker" => Some(3),
+        "warrior" | "paladin" | "death_knight" | "deathknight" => Some(4),
+        _ => None,
+    }
+}
+
+/// Parse the character class from a base profile string.
+/// Looks for the class="Name" line, e.g. `warrior="Sørtbek"`.
+fn detect_class(base_profile: &str) -> Option<String> {
+    let class_re = Regex::new(
+        r#"^(warrior|paladin|hunter|rogue|priest|death_knight|deathknight|shaman|mage|warlock|monk|demon_hunter|demonhunter|druid|evoker)\s*="#
+    ).unwrap();
+    for line in base_profile.lines() {
+        let trimmed = line.trim();
+        if let Some(caps) = class_re.captures(trimmed) {
+            return Some(caps[1].to_string());
+        }
+    }
+    None
+}
 
 pub const MAX_COMBINATIONS: usize = 500;
 
@@ -61,6 +96,32 @@ pub fn generate_top_gear_input(
 
         if !candidates.is_empty() {
             slot_item_lists.insert(slot, candidates);
+        }
+    }
+
+    // Filter out items whose armor type the character's class can't equip.
+    // Classes can wear their armor type and anything lighter (e.g. Mail can wear Leather/Cloth).
+    if let Some(class_name) = detect_class(base_profile) {
+        if let Some(max_subclass) = class_max_armor_subclass(&class_name) {
+            for slot in ARMOR_SLOTS {
+                let slot = slot.to_string();
+                if let Some(items) = slot_item_lists.get_mut(&slot) {
+                    items.retain(|item| {
+                        // Always keep equipped items (already validated by the game)
+                        if item.get("is_equipped").and_then(|v| v.as_bool()).unwrap_or(false) {
+                            return true;
+                        }
+                        let item_id = item.get("item_id").and_then(|v| v.as_u64()).unwrap_or(0);
+                        if item_id == 0 {
+                            return true;
+                        }
+                        match game_data::get_item_armor_subclass(item_id) {
+                            Some(subclass) => subclass <= max_subclass || subclass == 0, // 0 = Misc, always OK
+                            None => true, // Item not found in DB, keep it
+                        }
+                    });
+                }
+            }
         }
     }
 

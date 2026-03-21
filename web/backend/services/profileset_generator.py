@@ -13,6 +13,23 @@ import re
 from typing import Any
 
 from services.addon_parser import GEAR_SLOTS
+from services import game_data
+
+# Armor-type-restricted slots
+_ARMOR_SLOTS = {"head", "shoulder", "chest", "wrist", "hands", "waist", "legs", "feet"}
+
+# Class name -> max armor subclass (1=Cloth, 2=Leather, 3=Mail, 4=Plate)
+# Classes can wear their type and anything lighter (e.g. Mail can also wear Leather/Cloth)
+_CLASS_ARMOR = {
+    "priest": 1, "mage": 1, "warlock": 1,
+    "rogue": 2, "monk": 2, "druid": 2, "demon_hunter": 2, "demonhunter": 2,
+    "hunter": 3, "shaman": 3, "evoker": 3,
+    "warrior": 4, "paladin": 4, "death_knight": 4, "deathknight": 4,
+}
+
+_CLASS_RE = re.compile(
+    r"^(warrior|paladin|hunter|rogue|priest|death_knight|deathknight|shaman|mage|warlock|monk|demon_hunter|demonhunter|druid|evoker)\s*="
+)
 
 MAX_COMBINATIONS = 500
 
@@ -65,6 +82,29 @@ def generate_top_gear_input(
 
         if candidates:
             slot_item_lists[slot] = candidates
+
+    # Filter out items whose armor type doesn't match the character's class
+    detected_class = None
+    for line in base_profile.splitlines():
+        m = _CLASS_RE.match(line.strip())
+        if m:
+            detected_class = m.group(1)
+            break
+    if detected_class:
+        max_sub = _CLASS_ARMOR.get(detected_class)
+        if max_sub is not None:
+            for slot in _ARMOR_SLOTS:
+                if slot not in slot_item_lists:
+                    continue
+                filtered = []
+                for item in slot_item_lists[slot]:
+                    if item.get("is_equipped"):
+                        filtered.append(item)
+                        continue
+                    sc = game_data.get_item_armor_subclass(item.get("item_id", 0))
+                    if sc is None or sc <= max_sub or sc == 0:
+                        filtered.append(item)
+                slot_item_lists[slot] = filtered
 
     # Find slots that have alternatives (more than just equipped)
     varying_slots = [
