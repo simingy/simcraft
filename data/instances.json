@@ -1,0 +1,1157 @@
+[
+  {
+    "id": -32,
+    "name": "Normal Dungeons",
+    "description": "",
+    "image_button": "ui-ej-dungeonbutton-lightbloom",
+    "image_button_small": "lfgicon-lightbloom",
+    "image_background": "ui-ej-background-lightbloom",
+    "order": 102,
+    "flags": 0,
+    "type_id": 0,
+    "type": "expansion-dungeon",
+    "encounters": [
+      {
+        "id": 1311,
+        "name": "Den of Nalorakk",
+        "icon_button": "ui-ej-dungeonbutton-proveyourworth",
+        "flags": 0
+      },
+      {
+        "id": 1300,
+        "name": "Magisters' Terrace",
+        "icon_button": "ui-ej-dungeonbutton-magistersterrace-midnight",
+        "flags": 0
+      },
+      {
+        "id": 1315,
+        "name": "Maisara Caverns",
+        "icon_button": "ui-ej-dungeonbutton-maisarahills",
+        "flags": 0
+      },
+      {
+        "id": 1304,
+        "name": "Murder Row",
+        "icon_button": "ui-ej-dungeonbutton-murderrow",
+        "flags": 0
+      },
+      {
+        "id": 1316,
+        "name": "Nexus-Point Xenas",
+        "icon_button": "ui-ej-dungeonbutton-nexuspointxenas",
+        "flags": 0
+      },
+      {
+        "id": 1309,
+        "name": "The Blinding Vale",
+        "icon_button": "ui-ej-dungeonbutton-lightbloom",
+        "flags": 0
+      },
+      {
+        "id": 1313,
+        "name": "Voidscar Arena",
+        "icon_button": "ui-ej-dungeonbutton-domanaararena",
+        "flags": 0
+      },
+      {
+        "id": 1299,
+        "name": "Windrunner Spire",
+        "icon_button": "ui-ej-dungeonbutton-windrunnerspire",
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -1,
+    "name": "Mythic+ Dungeons",
+    "description": "",
+    "image_button": "ui-ej-dungeonbutton-seatofthetriumvirate",
+    "image_button_small": "lfgicon-seatofthetriumvirate",
+    "image_background": "ui-ej-background-seatofthetriumvirate",
+    "order": 100,
+    "flags": 0,
+    "type_id": 0,
+    "type": "mplus-chest",
+    "encounters": [
+      {
+        "id": 1201,
+        "name": "Algeth'ar Academy",
+        "icon_button": "ui-ej-dungeonbutton-theacademy",
+        "flags": 0
+      },
+      {
+        "id": 1300,
+        "name": "Magisters' Terrace",
+        "icon_button": "ui-ej-dungeonbutton-magistersterrace-midnight",
+        "flags": 0
+      },
+      {
+        "id": 1315,
+        "name": "Maisara Caverns",
+        "icon_button": "ui-ej-dungeonbutton-maisarahills",
+        "flags": 0
+      },
+      {
+        "id": 1316,
+        "name": "Nexus-Point Xenas",
+        "icon_button": "ui-ej-dungeonbutton-nexuspointxenas",
+        "flags": 0
+      },
+      {
+        "id": 278,
+        "name": "Pit of Saron",
+        "icon_button": "ui-ej-dungeonbutton-pitofsaron",
+        "flags": 0
+      },
+      {
+        "id": 945,
+        "name": "Seat of the Triumvirate",
+        "icon_button": "ui-ej-dungeonbutton-seatofthetriumvirate",
+        "flags": 0
+      },
+      {
+        "id": 476,
+        "name": "Skyreach",
+        "icon_button": "ui-ej-dungeonbutton-skyreach",
+        "flags": 0
+      },
+      {
+        "id": 1299,
+        "name": "Windrunner Spire",
+        "icon_button": "ui-ej-dungeonbutton-windrunnerspire",
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -90,
+    "name": "PVP Profession Items",
+    "description": "",
+    "image_background": "ui-ej-background-blackrockcaverns",
+    "image_button": "ui-ej-dungeonbutton-blackrockcaverns",
+    "image_button_small": "lfgicon-blackrockcaverns",
+    "order": 10133,
+    "flags": 0,
+    "type_id": 0,
+    "type": "professionMidnightPvp",
+    "encounters": [
+      {
+        "id": -43,
+        "name": "Alchemy",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      },
+      {
+        "id": -33,
+        "name": "Blacksmithing",
+        "icon_button": "",
+        "order": 2,
+        "flags": 0
+      },
+      {
+        "id": -34,
+        "name": "Enchanting",
+        "icon_button": "",
+        "order": 3,
+        "flags": 0
+      },
+      {
+        "id": -35,
+        "name": "Engineering",
+        "icon_button": "",
+        "order": 4,
+        "flags": 0
+      },
+      {
+        "id": -36,
+        "name": "Inscription",
+        "icon_button": "",
+        "order": 5,
+        "flags": 0
+      },
+      {
+        "id": -37,
+        "name": "Jewelcrafting",
+        "icon_button": "",
+        "order": 6,
+        "flags": 0
+      },
+      {
+        "id": -38,
+        "name": "Leatherworking",
+        "icon_button": "",
+        "order": 7,
+        "flags": 0
+      },
+      {
+        "id": -39,
+        "name": "Tailoring",
+        "icon_button": "",
+        "order": 8,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -89,
+    "name": "Rare Profession Items",
+    "description": "",
+    "image_background": "ui-ej-background-blackrockcaverns",
+    "image_button": "ui-ej-dungeonbutton-blackrockcaverns",
+    "image_button_small": "lfgicon-blackrockcaverns",
+    "order": 10132,
+    "flags": 0,
+    "type_id": 0,
+    "type": "professionMidnightRare",
+    "encounters": [
+      {
+        "id": -43,
+        "name": "Alchemy",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      },
+      {
+        "id": -33,
+        "name": "Blacksmithing",
+        "icon_button": "",
+        "order": 2,
+        "flags": 0
+      },
+      {
+        "id": -34,
+        "name": "Enchanting",
+        "icon_button": "",
+        "order": 3,
+        "flags": 0
+      },
+      {
+        "id": -35,
+        "name": "Engineering",
+        "icon_button": "",
+        "order": 4,
+        "flags": 0
+      },
+      {
+        "id": -36,
+        "name": "Inscription",
+        "icon_button": "",
+        "order": 5,
+        "flags": 0
+      },
+      {
+        "id": -37,
+        "name": "Jewelcrafting",
+        "icon_button": "",
+        "order": 6,
+        "flags": 0
+      },
+      {
+        "id": -38,
+        "name": "Leatherworking",
+        "icon_button": "",
+        "order": 7,
+        "flags": 0
+      },
+      {
+        "id": -39,
+        "name": "Tailoring",
+        "icon_button": "",
+        "order": 8,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -88,
+    "name": "Epic Profession Items",
+    "description": "",
+    "image_background": "ui-ej-background-blackrockcaverns",
+    "image_button": "ui-ej-dungeonbutton-blackrockcaverns",
+    "image_button_small": "lfgicon-blackrockcaverns",
+    "order": 10131,
+    "flags": 0,
+    "type_id": 0,
+    "type": "professionMidnightEpic",
+    "encounters": [
+      {
+        "id": -43,
+        "name": "Alchemy",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      },
+      {
+        "id": -33,
+        "name": "Blacksmithing",
+        "icon_button": "",
+        "order": 2,
+        "flags": 0
+      },
+      {
+        "id": -34,
+        "name": "Enchanting",
+        "icon_button": "",
+        "order": 3,
+        "flags": 0
+      },
+      {
+        "id": -35,
+        "name": "Engineering",
+        "icon_button": "",
+        "order": 4,
+        "flags": 0
+      },
+      {
+        "id": -36,
+        "name": "Inscription",
+        "icon_button": "",
+        "order": 5,
+        "flags": 0
+      },
+      {
+        "id": -37,
+        "name": "Jewelcrafting",
+        "icon_button": "",
+        "order": 6,
+        "flags": 0
+      },
+      {
+        "id": -38,
+        "name": "Leatherworking",
+        "icon_button": "",
+        "order": 7,
+        "flags": 0
+      },
+      {
+        "id": -39,
+        "name": "Tailoring",
+        "icon_button": "",
+        "order": 8,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -87,
+    "name": "Catalyst Season 1",
+    "description": "",
+    "image_background": "ui-ej-background-draenor",
+    "image_button": "ui-ej-dungeonbutton-draenor",
+    "image_button_small": "lfgicon-draenor",
+    "order": 10123,
+    "flags": 0,
+    "type_id": 0,
+    "type": "catalyst",
+    "encounters": [
+      {
+        "id": -87,
+        "name": "Catalyst - Midnight Season 1",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -84,
+    "name": "PVP Season 1 (Honor)",
+    "description": "",
+    "image_background": "ui-ej-background-diremaul",
+    "image_button": "ui-ej-dungeonbutton-diremaul",
+    "image_button_small": "lfgicon-diremaul",
+    "order": 10120,
+    "flags": 0,
+    "type_id": 0,
+    "type": "pvp-honor",
+    "encounters": [
+      {
+        "id": -84,
+        "name": "PVP Season 1 (Honor)",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -86,
+    "name": "PVP Season 1 (Bloody Tokens)",
+    "description": "",
+    "image_background": "ui-ej-background-diremaul",
+    "image_button": "ui-ej-dungeonbutton-diremaul",
+    "image_button_small": "lfgicon-diremaul",
+    "order": 10110,
+    "flags": 0,
+    "type_id": 0,
+    "type": "pvp-world",
+    "encounters": [
+      {
+        "id": -86,
+        "name": "PVP Season 1 (Bloody Tokens)",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": -85,
+    "name": "PVP Season 1 (Conquest)",
+    "description": "",
+    "image_background": "ui-ej-background-trialofthecrusader",
+    "image_button": "ui-ej-dungeonbutton-trialofthecrusader",
+    "image_button_small": "lfgicon-trialofthecrusader",
+    "order": 10100,
+    "flags": 0,
+    "type_id": 0,
+    "type": "pvp-conquest",
+    "encounters": [
+      {
+        "id": -85,
+        "name": "PVP Season 1 (Conquest)",
+        "icon_button": "",
+        "order": 1,
+        "flags": 0
+      }
+    ]
+  },
+  {
+    "id": 1201,
+    "name": "Algeth'ar Academy",
+    "description": "Long ago, the great Algeth'ar Academy was a place of higher learning for all dragons. Though it fell dormant with the rest of the Isles, it has reopened and is back under the guidance of Headteacher Doragosa. In a series of exciting, new changes the Academy is currently seeking new students from all walks of life, not just dragons, as well as volunteers to help get it back to the bustling halls of education it once was. Those who walk the Academy grounds are sure to learn something new.",
+    "image_button": "ui-ej-dungeonbutton-theacademy",
+    "image_button_small": "lfgicon-theacademy",
+    "image_background": "ui-ej-background-theacademy",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2509,
+        "name": "Vexamus",
+        "icon": "ui-ej-boss-vexamus",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2512,
+        "name": "Overgrown Ancient",
+        "icon": "ui-ej-boss-overgrown_ancient",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2495,
+        "name": "Crawth",
+        "icon": "ui-ej-boss-crawth",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2514,
+        "name": "Echo of Doragosa",
+        "icon": "ui-ej-boss-echo_of_doragosa",
+        "order": 5,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1311,
+    "name": "Den of Nalorakk",
+    "description": "Wounded by Zul'jin and Malacrass, Nalorakk turned his back on the Amani, slumbering in his den to ease his pain. Now, the Amani seek to heal the rift between their tribe and the loa. But, to gain Nalorakk's favor, those who come before him must complete his trials. Assist Zul'jarra as she journeys into the mind of the Loa of War to defeat him and gain his blessing.",
+    "image_button": "ui-ej-dungeonbutton-proveyourworth",
+    "image_button_small": "lfgicon-proveyourworth",
+    "image_background": "ui-ej-background-proveyourworth",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2776,
+        "name": "The Hoardmonger",
+        "icon": "ui-ej-boss-furbolgprimal",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2777,
+        "name": "Sentinel of Winter",
+        "icon": "ui-ej-boss-furbolgearth",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2778,
+        "name": "Nalorakk",
+        "icon": "ui-ej-boss-bearloa",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1300,
+    "name": "Magisters' Terrace",
+    "description": "Magisters' Terrace is the heart of arcane study for the sin'dorei, including Magister Umbric, long ago. Within its halls lies the Cynosure of Twilight, the key to unlocking the way into the Voidstorm.",
+    "image_button": "ui-ej-dungeonbutton-magistersterrace-midnight",
+    "image_button_small": "lfgicon-magistersterrace-midnight",
+    "image_background": "ui-ej-background-magistersterrace-midnight",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2659,
+        "name": "Arcanotron Custos",
+        "icon": "ui-ej-boss-arcane_crowd_dispersing_construct",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2661,
+        "name": "Seranel Sunlash",
+        "icon": "ui-ej-boss-seranel_sunlash",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": -1
+      },
+      {
+        "id": 2660,
+        "name": "Gemellus",
+        "icon": "ui-ej-boss-gemellus",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2662,
+        "name": "Degentrius",
+        "icon": "ui-ej-boss-degentrius",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1315,
+    "name": "Maisara Caverns",
+    "description": "Beneath the sacred Maisara Hills, Vilebranch trolls sacrifice Witherbark captives to power their necromancy. Their rituals twist stolen souls into fuel for Rak'tul, a monstrous dire troll bound in the depths. If the cavern's magic is left to fester, Zul'Aman will face a terror it cannot contain.",
+    "image_button": "ui-ej-dungeonbutton-maisarahills",
+    "image_button_small": "lfgicon-maisarahills",
+    "image_background": "ui-ej-background-maisarahills",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2810,
+        "name": "Muro'jin and Nekraxx",
+        "icon": "ui-ej-boss-murojinandnekraxx",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2811,
+        "name": "Vordaza",
+        "icon": "ui-ej-boss-vordaza",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2812,
+        "name": "Rak'tul, Vessel of Souls",
+        "icon": "ui-ej-boss-raktulvesselofsouls",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1308,
+    "name": "March on Quel'Danas",
+    "description": "Darkness has eclipsed the Isle of Quel'Danas, clouding the skies above Silvermoon City. With Arator the Redeemer by their side, the Champions of Azeroth must march on the Sunwell before the light of the blood elves is lost forever.",
+    "image_button": "ui-ej-dungeonbutton-darkwell",
+    "image_button_small": "lfgicon-darkwell",
+    "image_background": "ui-ej-background-darkwell",
+    "flags": 0,
+    "type_id": 2,
+    "type": "raid",
+    "encounters": [
+      {
+        "id": 2739,
+        "name": "Belo'ren, Child of Al'ar",
+        "icon": "ui-ej-boss-light_void_phoenix",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2740,
+        "name": "Midnight Falls",
+        "icon": "ui-ej-boss-lura-midnight",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": -1
+      }
+    ]
+  },
+  {
+    "id": 1312,
+    "name": "World Bosses",
+    "description": "As Xal'atath launches a devastating assault against the Sunwell, the fate of Quel'Thalas hangs by a thread. Great threats have risen from the swirling chaos of the Voidstorm, the ruins of the Amani Empire, and the blooming depths of Harandar. In this hour of reckoning, only the bold will stand against the coming darkness.",
+    "image_button": "ui-ej-dungeonbutton-midnight",
+    "image_button_small": "lfgicon-midnight",
+    "image_background": "ui-ej-background-midnight",
+    "flags": 2,
+    "type_id": 2,
+    "type": "raid",
+    "encounters": [
+      {
+        "id": 2827,
+        "name": "Lu'ashal",
+        "icon": "ui-ej-boss-luashal",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2829,
+        "name": "Thorm'belan",
+        "icon": "ui-ej-boss-thormbelan",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2828,
+        "name": "Predaxas",
+        "icon": "ui-ej-boss-predaxas",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2782,
+        "name": "Cragpine",
+        "icon": "ui-ej-boss-cragpine",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1304,
+    "name": "Murder Row",
+    "description": "The darkened streets of Murder Row hide a secret fel-smuggling operation that has been preying on the fears of Silvermoon's citizens ever since the Voidstorm appeared.",
+    "image_button": "ui-ej-dungeonbutton-murderrow",
+    "image_button_small": "lfgicon-murderrow",
+    "image_background": "ui-ej-background-murderrow",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2679,
+        "name": "Kystia Manaheart",
+        "icon": "ui-ej-boss-kystia_manaheart",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2680,
+        "name": "Zaen Bladesorrow",
+        "icon": "ui-ej-boss-zaen_bladesorrow",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2681,
+        "name": "Xathuux the Annihilator",
+        "icon": "ui-ej-boss-xathuux_the_annihilator",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2682,
+        "name": "Lithiel Cinderfury",
+        "icon": "ui-ej-boss-lithiel_cinderfury",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1316,
+    "name": "Nexus-Point Xenas",
+    "description": "A fractured facility teetering on the edge of collapse. Once a hub of innovation, its core now pulses with unstable void and arcane energy. Brave adventurers must navigate its shifting wings, confront voidwalking guardians, and uncover the truth behind its unraveling power.",
+    "image_button": "ui-ej-dungeonbutton-nexuspointxenas",
+    "image_button_small": "lfgicon-nexuspointxenas",
+    "image_background": "ui-ej-background-nexuspointxenas",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2813,
+        "name": "Chief Corewright Kasreth",
+        "icon": "ui-ej-boss-chiefcorewrightkasreth",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2814,
+        "name": "Corewarden Nysarra",
+        "icon": "ui-ej-boss-corewardennysarra",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2815,
+        "name": "Lothraxion",
+        "icon": "ui-ej-boss-lothraxion",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 278,
+    "name": "Pit of Saron",
+    "description": "Agents of the Lich King have captured Alliance forces and put them to work in this frozen quarry. To disrupt this critical source of saronite used for the Scourge's war effort, Lady Jaina Proudmoore and her allies aim to free these captives and put down the leader of this operation, Scourgelord Tyrannus.",
+    "image_button": "ui-ej-dungeonbutton-pitofsaron",
+    "image_button_small": "lfgicon-pitofsaron",
+    "image_background": "ui-ej-background-pitofsaron",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 608,
+        "name": "Forgemaster Garfrost",
+        "icon": "ui-ej-boss-forgemaster_garfrost",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 609,
+        "name": "Ick and Krick",
+        "icon": "ui-ej-boss-ickandkrick",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 610,
+        "name": "Scourgelord Tyrannus",
+        "icon": "ui-ej-boss-scourgelordtyrannus",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 945,
+    "name": "Seat of the Triumvirate",
+    "description": "Argus was governed from the gleaming halls of the Seat of the Triumvirate--until the eredar struck their unholy bargain with Sargeras. Enraged by Velen's defiant exodus, Kil'jaeden decreed that the Seat should be abandoned as a symbol of an irrelevant past... for the Legion had become their future.\r\n\r\nIts once-gleaming halls now fallen into shadow, the Seat radiates a dark power that has drawn those seeking to harness the might of the Void and unleash it upon their enemies.",
+    "image_button": "ui-ej-dungeonbutton-seatofthetriumvirate",
+    "image_button_small": "lfgicon-seatofthetriumvirate",
+    "image_background": "ui-ej-background-seatofthetriumvirate",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 1979,
+        "name": "Zuraal the Ascended",
+        "icon": "ui-ej-boss-zuraaltheascended",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 1980,
+        "name": "Saprish",
+        "icon": "ui-ej-boss-saprish",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 1981,
+        "name": "Viceroy Nezhar",
+        "icon": "ui-ej-boss-viceroynezhar",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 1982,
+        "name": "L'ura",
+        "icon": "ui-ej-boss-lura",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 476,
+    "name": "Skyreach",
+    "description": "Atop the crowning pinnacle of the Spires of Arak, amidst the clouds, Skyreach stands as the seat of power of the Adherents of Rukhmar. The arakkoa have gathered and harnessed the Apexis technology of their forebears, and now they are ready to unleash the focused power of the sun upon their enemies.",
+    "image_button": "ui-ej-dungeonbutton-skyreach",
+    "image_button_small": "lfgicon-skyreach",
+    "image_background": "ui-ej-background-skyreach",
+    "flags": 1,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 965,
+        "name": "Ranjit",
+        "icon": "ui-ej-boss-ranjit",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 966,
+        "name": "Araknath",
+        "icon": "ui-ej-boss-araknath",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 967,
+        "name": "Rukhran",
+        "icon": "ui-ej-boss-rukhran",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 968,
+        "name": "High Sage Viryx",
+        "icon": "ui-ej-boss-high_sage_viryx",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": -1
+      }
+    ]
+  },
+  {
+    "id": 1309,
+    "name": "The Blinding Vale",
+    "description": "The Blinding Vale sprouted instantly. From within the Lightbloom, rutaani emerged and spread the Lightbloom in their wake.\r\nAfter the Lightbloom's defeat in Eversong, Orweyna began surgical strikes to keep the Lightbloom in check. But the hideous glare of the Blinding Vale hides a garden where the Lightbloom cultivates new creatures and magic to drive forward their one fanatical imperative. Growth unstoppable.",
+    "image_button": "ui-ej-dungeonbutton-lightbloom",
+    "image_button_small": "lfgicon-lightbloom",
+    "image_background": "ui-ej-background-lightbloom",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2769,
+        "name": "Lightblossom Trinity",
+        "icon": "ui-ej-boss-lightblossomtrinity",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2770,
+        "name": "Ikuzz the Light Hunter",
+        "icon": "ui-ej-boss-lighthunterikuzz",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2771,
+        "name": "Lightwarden Ruia",
+        "icon": "ui-ej-boss-lightwardenruia",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2772,
+        "name": "Ziekket",
+        "icon": "ui-ej-boss-ziekket",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1314,
+    "name": "The Dreamrift",
+    "description": "The Dreamrift exists deep within the Rift of Aln, where the dreams of Aln'hara took form long ago. Dark manifestations have grown within the rift in Aln'hara's absence, devouring each other in an endless cycle. Even the brave haranir dare not delve too deep, for now something greater and more terrible lurks within the Dreamrift's depths.",
+    "image_button": "ui-ej-dungeonbutton-riftofaln",
+    "image_button_small": "lfgicon-riftofaln",
+    "image_background": "ui-ej-background-riftofaln",
+    "flags": 0,
+    "type_id": 2,
+    "type": "raid",
+    "encounters": [
+      {
+        "id": 2795,
+        "name": "Chimaerus the Undreamt God",
+        "icon": "ui-ej-boss-malformed_manifestation",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1307,
+    "name": "The Voidspire",
+    "description": "From high above the Voidstorm, Xal'atath has gathered the Devouring Host beneath her dark banner. The towering Voidspire looms like a spear of darkness, a citadel guarded by an army of the void. The forces of the light - led by Alleria Windrunner and the Champions of Azeroth - must rally for one last desperate assault before all is lost.",
+    "image_button": "ui-ej-dungeonbutton-voidspire",
+    "image_button_small": "lfgicon-voidspire",
+    "image_background": "ui-ej-background-voidspire",
+    "flags": 0,
+    "type_id": 2,
+    "type": "raid",
+    "encounters": [
+      {
+        "id": 2733,
+        "name": "Imperator Averzian",
+        "icon": "ui-ej-boss-host_general",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2734,
+        "name": "Vorasius",
+        "icon": "ui-ej-boss-kaiju",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2736,
+        "name": "Fallen-King Salhadaar",
+        "icon": "ui-ej-boss-salhadaar",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2735,
+        "name": "Vaelgor & Ezzorak",
+        "icon": "ui-ej-boss-dragon_duo",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2737,
+        "name": "Lightblinded Vanguard",
+        "icon": "ui-ej-boss-paladin_trio",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2738,
+        "name": "Crown of the Cosmos",
+        "icon": "ui-ej-boss-alleria",
+        "order": 5,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1313,
+    "name": "Voidscar Arena",
+    "description": "The Voidscar Arena awaits worthy challengers! Overseer Charonus has filled the arena with opponents plucked from across Azeroth, forcing them to participate in his games.",
+    "image_button": "ui-ej-dungeonbutton-domanaararena",
+    "image_button_small": "lfgicon-domanaararena",
+    "image_background": "ui-ej-background-domanaararena",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2791,
+        "name": "Taz'Rah",
+        "icon": "ui-ej-boss-tazrah",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2792,
+        "name": "Atroxus",
+        "icon": "ui-ej-boss-atroxus",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2793,
+        "name": "Charonus",
+        "icon": "ui-ej-boss-charonus",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": 1299,
+    "name": "Windrunner Spire",
+    "description": "Once the hallowed home of the Windunner family, Windrunner Spire now mirrors the scarred relationship between Alleria, Sylvanas, and Vereesa. Animosity during a reunion at the home drove suffering and grief into a haunted manifestation that binds the spirits there, unable to find peace.",
+    "image_button": "ui-ej-dungeonbutton-windrunnerspire",
+    "image_button_small": "lfgicon-windrunnerspire",
+    "image_background": "ui-ej-background-windrunnerspire",
+    "flags": 0,
+    "type_id": 1,
+    "type": "dungeon",
+    "encounters": [
+      {
+        "id": 2655,
+        "name": "Emberdawn",
+        "icon": "ui-ej-boss-emberdawn",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2656,
+        "name": "Derelict Duo",
+        "icon": "ui-ej-boss-derelict_duo",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2657,
+        "name": "Commander Kroluk",
+        "icon": "ui-ej-boss-commander_kroluk",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2658,
+        "name": "The Restless Heart",
+        "icon": "ui-ej-boss-the_restless_heart",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      }
+    ]
+  },
+  {
+    "id": -91,
+    "name": "Season 1 Raids",
+    "type": "raid",
+    "order": 9,
+    "image_button": "ui-ej-dungeonbutton-midnight",
+    "encounters": [
+      {
+        "id": 2733,
+        "name": "Imperator Averzian",
+        "icon": "ui-ej-boss-host_general",
+        "order": 0,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2734,
+        "name": "Vorasius",
+        "icon": "ui-ej-boss-kaiju",
+        "order": 1,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2736,
+        "name": "Fallen-King Salhadaar",
+        "icon": "ui-ej-boss-salhadaar",
+        "order": 2,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2735,
+        "name": "Vaelgor & Ezzorak",
+        "icon": "ui-ej-boss-dragon_duo",
+        "order": 3,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2737,
+        "name": "Lightblinded Vanguard",
+        "icon": "ui-ej-boss-paladin_trio",
+        "order": 4,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2738,
+        "name": "Crown of the Cosmos",
+        "icon": "ui-ej-boss-alleria",
+        "order": 5,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2795,
+        "name": "Chimaerus the Undreamt God",
+        "icon": "ui-ej-boss-malformed_manifestation",
+        "order": 101,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2739,
+        "name": "Belo'ren, Child of Al'ar",
+        "icon": "ui-ej-boss-light_void_phoenix",
+        "order": 200,
+        "flags": 0,
+        "difficulty_mask": 255
+      },
+      {
+        "id": 2740,
+        "name": "Midnight Falls",
+        "icon": "ui-ej-boss-lura-midnight",
+        "order": 201,
+        "flags": 0,
+        "difficulty_mask": -1
+      }
+    ]
+  }
+]

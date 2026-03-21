@@ -11,7 +11,11 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+# Repo root data/ for local dev; falls back to backend/data/ for Docker (downloaded at build time)
+DATA_DIR = _BACKEND_DIR.parent.parent / "data"
+if not DATA_DIR.is_dir():
+    DATA_DIR = _BACKEND_DIR / "data"
 
 # In-memory lookup tables populated by load()
 _items: dict[int, dict] = {}
