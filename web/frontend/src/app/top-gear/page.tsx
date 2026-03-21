@@ -160,9 +160,38 @@ export default function TopGearPage() {
       <button
         onClick={handleSubmit}
         disabled={submitting}
-        className="btn-primary w-full py-3 text-sm"
+        className="btn-primary w-full py-3 text-sm flex items-center justify-center gap-2"
       >
-        {submitting ? "Running…" : "Find Top Gear"}
+        {submitting ? (
+          <>
+            <svg className="w-4 h-4 animate-spin" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+              <path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            Starting sim…
+          </>
+        ) : "Find Top Gear"}
+      </button>
+
+      {/* Sticky side button */}
+      <button
+        onClick={handleSubmit}
+        disabled={submitting}
+        className="group fixed right-4 top-1/2 -translate-y-1/2 z-[90] btn-primary w-10 hover:w-auto py-2.5 px-2.5 hover:px-4 text-sm rounded-full hover:rounded-xl shadow-lg shadow-black/50 flex items-center gap-0 hover:gap-2 transition-all duration-200 overflow-hidden"
+      >
+        {submitting ? (
+          <svg className="w-4 h-4 shrink-0 animate-spin" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+            <path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M3 2l10 6-10 6V2z" />
+          </svg>
+        )}
+        <span className="whitespace-nowrap max-w-0 group-hover:max-w-[10rem] overflow-hidden transition-all duration-200 opacity-0 group-hover:opacity-100">
+          {submitting ? "Starting sim…" : "Find Top Gear"}
+        </span>
       </button>
     </div>
   );
