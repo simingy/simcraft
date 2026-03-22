@@ -25,6 +25,12 @@ impl JobStorage for MemoryStorage {
         self.jobs.lock().unwrap().get(id).cloned()
     }
 
+    fn list(&self) -> Vec<Job> {
+        let mut jobs: Vec<Job> = self.jobs.lock().unwrap().values().cloned().collect();
+        jobs.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        jobs
+    }
+
     fn update_status(&self, id: &str, status: JobStatus) {
         if let Some(job) = self.jobs.lock().unwrap().get_mut(id) {
             job.status = status;

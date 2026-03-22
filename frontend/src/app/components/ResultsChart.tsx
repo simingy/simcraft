@@ -66,25 +66,28 @@ export default function ResultsChart({
             const name = a.name.replace(/_/g, " ");
 
             return (
-              <div key={i} className="group relative flex items-center h-7">
+              <div
+                key={i}
+                className="group relative flex items-center h-8 bg-surface-2 border border-border/50 rounded-md overflow-hidden"
+              >
                 {/* Background bar */}
                 <div
-                  className="absolute inset-y-0 left-0 rounded-r opacity-[0.08] group-hover:opacity-[0.14] transition-opacity"
+                  className="absolute inset-y-0 left-0 transition-opacity opacity-[0.25] group-hover:opacity-[0.35]"
                   style={{ width: `${barWidth}%`, backgroundColor: color }}
                 />
                 {/* Left edge accent */}
                 <div
-                  className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full"
-                  style={{ backgroundColor: color, opacity: 0.6 }}
+                  className="absolute left-0 top-0 bottom-0 w-1"
+                  style={{ backgroundColor: color }}
                 />
                 {/* Content */}
-                <span className="relative pl-3 text-[12px] text-gray-300 truncate flex-1">
+                <span className="relative pl-3 text-[13px] font-medium text-gray-100 truncate flex-1 drop-shadow-md">
                   {name}
                 </span>
-                <span className="relative text-[11px] font-mono tabular-nums text-gray-500 w-16 text-right shrink-0">
+                <span className="relative text-[12px] font-mono font-medium tabular-nums text-gray-300 w-16 text-right shrink-0 drop-shadow-md">
                   {Math.round(a.portion_dps).toLocaleString()}
                 </span>
-                <span className="relative text-[11px] font-mono tabular-nums text-gray-500 w-12 text-right shrink-0">
+                <span className="relative pr-3 text-[12px] font-mono font-medium tabular-nums text-gray-400 w-14 text-right shrink-0">
                   {pct.toFixed(1)}%
                 </span>
               </div>

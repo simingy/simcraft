@@ -42,12 +42,12 @@ export default function RootLayout({
           <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl desktop-drag">
             <div className="px-6 h-12 flex items-center justify-between">
               <a href="/" className="flex items-center gap-2 group desktop-no-drag">
-                <div className="w-5 h-5 rounded bg-gold/90 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-black" viewBox="0 0 16 16" fill="currentColor">
+                <div className="w-6 h-6 rounded bg-gold/90 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-black" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M3 2l10 6-10 6V2z" />
                   </svg>
                 </div>
-                <span className="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors">
+                <span className="text-base font-semibold text-gray-200 group-hover:text-white transition-colors">
                   SimHammer
                 </span>
               </a>
@@ -64,13 +64,13 @@ export default function RootLayout({
             {children}
           </main>
         </SimProvider>
-        <footer className="border-t border-border/50 mt-16 py-6">
-          <p className="text-center text-[11px] text-gray-500 max-w-lg mx-auto leading-relaxed">
+        <footer className="border-t border-border/50 mt-16 py-8">
+          <p className="text-center text-[13px] text-gray-400 max-w-2xl mx-auto leading-relaxed">
             SimHammer is a pet project held together by coffee, duct tape, and prayers to the RNG gods.
             Bugs are not features — but they might sim higher than your gear. Use at your own risk.
             Not affiliated with Blizzard, Raidbots, or anyone who knows what they&apos;re doing.
           </p>
-          <p className="text-center text-[11px] text-gray-600 mt-2">v1.0.0</p>
+          <p className="text-center text-[12px] font-medium text-gray-500 mt-3">v1.0.0</p>
         </footer>
       </body>
     </html>

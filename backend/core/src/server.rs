@@ -621,6 +621,50 @@ async fn get_gem_info(path: web::Path<u64>) -> HttpResponse {
     HttpResponse::Ok().json(result)
 }
 
+fn extract_character_name(simc_input: &str) -> String {
+    let re = regex::Regex::new(r#"(?m)^([a-zA-Z0-9_]+)="([^"]+)""#).unwrap();
+    if let Some(caps) = re.captures(simc_input) {
+        if let Some(m) = caps.get(2) {
+            return m.as_str().to_string();
+        }
+    }
+    
+    // Fallback try to match armory line: armory=us,illidan,Name
+    let re_armory = regex::Regex::new(r#"(?m)^armory=[a-zA-Z]+,[a-zA-Z0-9_]+,([^,\n]+)"#).unwrap();
+    if let Some(caps) = re_armory.captures(simc_input) {
+         if let Some(m) = caps.get(1) {
+             return m.as_str().to_string();
+         }
+    }
+
+    "Unknown".to_string()
+}
+
+async fn list_sims(store: web::Data<Arc<dyn JobStorage>>) -> HttpResponse {
+    let jobs = store.list();
+    let summaries: Vec<Value> = jobs.into_iter().map(|job| {
+        let name = extract_character_name(&job.simc_input);
+        
+        // Convert status to string properly
+        let status_str = match job.status {
+            JobStatus::Pending => "pending",
+            JobStatus::Running => "running",
+            JobStatus::Done => "done",
+            JobStatus::Failed => "failed",
+        };
+
+        json!({
+            "id": job.id,
+            "status": status_str,
+            "sim_type": job.sim_type,
+            "character_name": name,
+            "created_at": job.created_at,
+        })
+    }).collect();
+
+    HttpResponse::Ok().json(summaries)
+}
+
 async fn get_max_upgrade_ilevels(body: web::Json<Vec<Value>>) -> HttpResponse {
     let mut results: HashMap<String, u64> = HashMap::new();
     for item in body.iter().take(200) {
@@ -791,6 +835,7 @@ pub async fn start_with_storage_bind(
         { app = app.app_data(stats_data.clone()); }
         let mut app = app
             .route("/api/sim", web::post().to(create_sim))
+            .route("/api/sims", web::get().to(list_sims))
             .route("/api/top-gear/sim", web::post().to(create_top_gear_sim))
             .route("/api/sim/{id}", web::get().to(get_sim_status))
             .route("/api/sim/{id}/raw", web::get().to(get_sim_raw))

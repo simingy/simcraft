@@ -246,18 +246,18 @@ export default function TopGearResults({
                   style={{ width: `${barWidth}%` }}
                 />
                 <div className="relative flex items-center justify-between px-3 py-2 gap-3">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-[10px] font-mono text-gray-600 w-5 text-right shrink-0 tabular-nums">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 pl-1">
+                    <span className="text-xs font-mono text-gray-500 w-5 text-right shrink-0 tabular-nums">
                       {idx + 1}
                     </span>
 
                     {isEquipped ? (
-                      <span className="text-[12px] text-muted">
+                      <span className="text-[13px] text-muted">
                         Currently Equipped
                       </span>
                     ) : (
                       <div className="flex items-center gap-1 min-w-0 flex-wrap">
-                        {result.items.map((it, i) => (
+                        {result.items.filter(it => !it.is_kept).map((it, i) => (
                           <ItemTag
                             key={i}
                             item={it}
@@ -274,24 +274,14 @@ export default function TopGearResults({
                     )}
 
                     {isBest && (
-                      <span className="shrink-0 text-[9px] uppercase tracking-wider font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded">
+                      <span className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded">
                         Best
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    {result.delta !== 0 && baseDps > 0 && (
-                      <span
-                        className={`text-[11px] font-mono tabular-nums ${
-                          result.delta > 0 ? "text-emerald-400/60" : "text-red-400/60"
-                        }`}
-                      >
-                        {result.delta > 0 ? "+" : ""}
-                        {((result.delta / baseDps) * 100).toFixed(1)}%
-                      </span>
-                    )}
                     <span
-                      className={`text-[11px] font-mono tabular-nums ${
+                      className={`text-[13px] font-mono tabular-nums flex items-center gap-1.5 ${
                         result.delta > 0
                           ? "text-emerald-400"
                           : result.delta < 0
@@ -299,13 +289,20 @@ export default function TopGearResults({
                           : "text-muted"
                       }`}
                     >
-                      {result.delta > 0
-                        ? `+${Math.round(result.delta).toLocaleString()}`
-                        : result.delta < 0
-                        ? Math.round(result.delta).toLocaleString()
-                        : "—"}
+                      <span>
+                        {result.delta > 0
+                          ? `+${Math.round(result.delta).toLocaleString()}`
+                          : result.delta < 0
+                          ? Math.round(result.delta).toLocaleString()
+                          : "—"}
+                      </span>
+                      {result.delta !== 0 && baseDps > 0 && (
+                        <span className="text-xs opacity-70">
+                          ({result.delta > 0 ? "+" : ""}{((result.delta / baseDps) * 100).toFixed(1)}%)
+                        </span>
+                      )}
                     </span>
-                    <span className="text-[12px] font-mono text-gray-400 tabular-nums w-16 text-right">
+                    <span className="text-sm font-mono text-gray-300 tabular-nums w-16 text-right">
                       {Math.round(result.dps).toLocaleString()}
                     </span>
                   </div>
@@ -336,11 +333,11 @@ function GearSlotRow({
 }) {
   if (!item || item.item_id <= 0) {
     return (
-      <div className="flex items-center gap-2 rounded-lg px-2 py-1.5">
-        <div className="w-7 h-7 shrink-0 rounded bg-white/[0.03] border border-border" />
+      <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
+        <div className="w-8 h-8 shrink-0 rounded bg-white/[0.03] border border-border" />
         <div>
-          <p className="text-[11px] text-gray-600">{SLOT_LABELS[slot] || slot}</p>
-          <p className="text-[9px] text-gray-700">Empty</p>
+          <p className="text-[12px] text-gray-600">{SLOT_LABELS[slot] || slot}</p>
+          <p className="text-[11px] text-gray-700">Empty</p>
         </div>
       </div>
     );
@@ -356,27 +353,27 @@ function GearSlotRow({
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 ${
+      className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${
         isUpgrade ? "bg-emerald-500/[0.07] ring-1 ring-emerald-500/20" : ""
       }`}
     >
-      <div className="w-7 h-7 shrink-0 rounded overflow-hidden border border-border">
+      <div className="w-8 h-8 shrink-0 rounded overflow-hidden border border-border">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={getIconUrl(icon)}
           alt=""
-          width={28}
-          height={28}
-          className="w-full h-full"
+          width={32}
+          height={32}
+          className="w-full h-full object-cover"
           loading="lazy"
         />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <a
             href={item.item_id > 0 ? getWowheadUrl(item.item_id) : undefined}
             data-wowhead={whData}
-            className="text-[11px] font-medium leading-tight no-underline truncate"
+            className="text-[13px] font-medium leading-tight no-underline truncate"
             style={{ color: qc }}
             target="_blank"
             rel="noopener noreferrer"
@@ -385,12 +382,12 @@ function GearSlotRow({
             {name}
           </a>
           {isUpgrade && (
-            <span className="shrink-0 text-[8px] uppercase tracking-wider font-bold text-emerald-400 bg-emerald-500/10 px-1 py-px rounded">
+            <span className="shrink-0 text-[9px] uppercase tracking-wider font-bold text-emerald-400 bg-emerald-500/10 px-1 py-px rounded">
               New
             </span>
           )}
         </div>
-        <p className="text-[9px] text-muted truncate">
+        <p className="text-[11px] text-muted truncate mt-0.5">
           {SLOT_LABELS[slot] || slot}
           {item.ilevel > 0 && ` · ${item.ilevel}`}
           {info?.tag && ` · ${info.tag}`}
@@ -411,25 +408,25 @@ function ItemTag({ item, info, enchant, gem }: { item: ResultItem; info?: ItemIn
 
   return (
     <div
-      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${
+      className={`inline-flex items-center gap-1.5 rounded px-2 py-1 ${
         kept ? "opacity-40" : "bg-white/[0.04]"
       }`}
     >
-      <div className="w-4 h-4 shrink-0 rounded-sm overflow-hidden">
+      <div className="w-5 h-5 shrink-0 rounded-sm overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={getIconUrl(icon)}
           alt=""
-          width={16}
-          height={16}
-          className="w-full h-full"
+          width={20}
+          height={20}
+          className="w-full h-full object-cover"
           loading="lazy"
         />
       </div>
       <a
         href={item.item_id > 0 ? getWowheadUrl(item.item_id) : undefined}
         data-wowhead={whData}
-        className="text-[11px] font-medium truncate max-w-[120px] no-underline"
+        className="text-[13px] font-medium truncate max-w-[160px] no-underline"
         style={{ color: qc }}
         target="_blank"
         rel="noopener noreferrer"
@@ -438,7 +435,7 @@ function ItemTag({ item, info, enchant, gem }: { item: ResultItem; info?: ItemIn
         {name}
       </a>
       {enchant?.name && (
-        <span className="text-[9px] text-emerald-400/70 truncate max-w-[70px]" title={enchant.name}>
+        <span className="text-[11px] text-emerald-400/70 truncate max-w-[90px]" title={enchant.name}>
           {enchant.name}
         </span>
       )}

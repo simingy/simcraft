@@ -57,12 +57,12 @@ export default function SettingsPopover() {
         onClick={() => setOpen(!open)}
         className="h-7 flex items-center gap-1.5 rounded-md px-2 text-gray-400 hover:text-gray-200 hover:bg-white/[0.06] transition-colors"
       >
-        <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="1" y="5" width="14" height="7" rx="1" />
           <rect x="1" y="5" width={14 * (selectedIdx >= 0 ? PRESETS[selectedIdx].pct : 0.6)} height="7" rx="1" fill="currentColor" opacity="0.25" />
           <path d="M4 1v4M8 1v4M12 1v4" />
         </svg>
-        <span className="text-[11px] font-medium">
+        <span className="text-[13px] font-medium">
           {selectedIdx >= 0 ? PRESETS[selectedIdx].label : "Performance"}
         </span>
       </button>
@@ -70,8 +70,8 @@ export default function SettingsPopover() {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-72 bg-surface border border-border rounded-xl shadow-xl shadow-black/40 p-4 z-[60]">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] font-medium text-gray-300">CPU Threads</span>
-            <span className="text-xs font-mono bg-surface-2 border border-border px-2 py-0.5 rounded text-white tabular-nums">
+            <span className="text-base font-medium text-gray-300">CPU Threads</span>
+            <span className="text-[13px] font-mono bg-surface-2 border border-border px-2 py-0.5 rounded text-white tabular-nums">
               {threads}/{maxThreads}
             </span>
           </div>
@@ -89,8 +89,8 @@ export default function SettingsPopover() {
                       : "bg-surface-2 text-gray-400 border-border hover:border-gray-500 hover:text-white"
                   }`}
                 >
-                  <span className="text-[12px] font-medium block">{preset.label}</span>
-                  <span className={`text-[10px] block mt-0.5 ${active ? "text-gray-600" : "text-gray-600"}`}>
+                  <span className="text-sm font-medium block">{preset.label}</span>
+                  <span className={`text-[12px] block mt-0.5 ${active ? "text-gray-600" : "text-gray-600"}`}>
                     {t} threads
                   </span>
                 </button>

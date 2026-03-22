@@ -81,9 +81,9 @@ export default function SimStatus({
       <div className="w-10 h-10 border-2 border-border border-t-gold rounded-full animate-spin" />
 
       <div className="text-center">
-        <p className="text-sm text-white font-medium">{title}</p>
+        <p className="text-base text-gray-100 font-medium">{title}</p>
         {progressDetail && (
-          <p className="text-[11px] text-gray-400 mt-1">{progressDetail}</p>
+          <p className="text-[13px] text-gray-400 mt-1.5">{progressDetail}</p>
         )}
       </div>
 
@@ -94,12 +94,12 @@ export default function SimStatus({
             style={{ width: `${Math.max(displayProgress, status === "pending" ? 2 : 5)}%` }}
           />
         </div>
-        <div className="flex items-center justify-between mt-2">
-          <p className="text-[11px] text-gray-400 font-mono tabular-nums">
+        <div className="flex items-center justify-between mt-2.5">
+          <p className="text-[13px] text-gray-400 font-mono tabular-nums">
             {displayProgress}%
           </p>
           {cpuUsage !== null && (
-            <p className="text-[11px] text-gray-400 font-mono tabular-nums">
+            <p className="text-[13px] text-gray-400 font-mono tabular-nums">
               CPU {Math.round(cpuUsage)}%
             </p>
           )}
@@ -110,18 +110,18 @@ export default function SimStatus({
         <div className="w-72 space-y-1 pt-2">
           {stagesCompleted!.map((stage, i) => (
             <div key={i} className="flex items-center gap-2">
-              <svg className="w-3 h-3 text-emerald-500 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 text-emerald-500 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5L6.5 10.5L4 8" />
               </svg>
-              <span className="text-[11px] text-gray-400">{stage}</span>
+              <span className="text-[13px] text-gray-400">{stage}</span>
             </div>
           ))}
           {progressStage && (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 flex items-center justify-center shrink-0">
-                <div className="w-1.5 h-1.5 bg-gold rounded-full animate-pulse" />
+              <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                <div className="w-2 h-2 bg-gold rounded-full animate-pulse" />
               </div>
-              <span className="text-[11px] text-gray-400">
+              <span className="text-[13px] text-gray-400">
                 {progressStage}
                 {progressDetail && <span className="text-gray-500"> · {progressDetail}</span>}
               </span>

@@ -9,7 +9,7 @@ const simTypes = [
     label: "Quick Sim",
     description: "Simulate your character as-is. Get DPS, ability breakdown, and stat weights.",
     icon: (
-      <svg className="w-5 h-5 text-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg className="w-[18px] h-[18px] text-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
         <path d="M13 8l-5 5-5-5M3 3h10" />
       </svg>
     ),
@@ -20,7 +20,7 @@ const simTypes = [
     label: "Top Gear",
     description: "Find the best gear combination from your bags, bank, and vault.",
     icon: (
-      <svg className="w-5 h-5 text-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg className="w-[18px] h-[18px] text-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
         <path d="M8 1l2 4 4.5.7-3.2 3.1.8 4.5L8 11l-4.1 2.3.8-4.5L1.5 5.7 6 5z" />
       </svg>
     ),
@@ -31,7 +31,7 @@ const simTypes = [
     label: "Drop Finder",
     description: "Browse loot tables for raids and dungeons by slot.",
     icon: (
-      <svg className="w-5 h-5 text-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg className="w-[18px] h-[18px] text-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="7" cy="7" r="4.5" />
         <path d="M10.5 10.5L14 14" />
       </svg>
@@ -59,19 +59,19 @@ export default function SimTypeCards() {
                 : "hover:border-gold/20"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+            <div className="flex items-center gap-3.5">
+              <div className={`w-[38px] h-[38px] rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                 isActive ? "bg-gold/20" : "bg-gold/10"
               }`}>
                 {sim.icon}
               </div>
-              <div>
-                <h2 className={`text-[15px] font-semibold transition-colors ${
-                  isActive ? "text-gold" : "text-white group-hover:text-gold"
+              <div className="flex flex-col gap-0.5 mt-0.5">
+                <h2 className={`text-[15px] font-medium tracking-tight transition-colors ${
+                  isActive ? "text-gold" : "text-gray-100 group-hover:text-gold"
                 }`}>
                   {sim.label}
                 </h2>
-                <p className="text-[11px] text-muted hidden sm:block">
+                <p className="text-[13px] text-gray-400 leading-snug hidden sm:block">
                   {sim.description}
                 </p>
               </div>

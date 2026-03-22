@@ -119,6 +119,26 @@ impl JobStorage for SqliteStorage {
         ).ok()
     }
 
+    fn list(&self) -> Vec<Job> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = match conn.prepare(
+            "SELECT id, status, sim_type, simc_input, result_json, combo_metadata_json,
+             error_message, progress_pct, progress_stage, progress_detail, stages_completed,
+             iterations, fight_style, target_error, created_at
+             FROM jobs ORDER BY created_at DESC"
+        ) {
+            Ok(s) => s,
+            Err(_) => return vec![],
+        };
+        
+        let job_iter = match stmt.query_map([], Self::row_to_job) {
+            Ok(i) => i,
+            Err(_) => return vec![],
+        };
+
+        job_iter.filter_map(Result::ok).collect()
+    }
+
     fn update_status(&self, id: &str, status: JobStatus) {
         let conn = self.conn.lock().unwrap();
         conn.execute(

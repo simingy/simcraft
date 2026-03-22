@@ -58,27 +58,27 @@ export default function UpdateChecker() {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-200">
+          <p className="text-base font-medium text-gray-200">
             Update available
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-[13px] text-gray-400 mt-0.5">
             SimHammer v{version} is ready to install.
           </p>
           {error && (
-            <p className="text-xs text-red-400 mt-1">{error}</p>
+            <p className="text-[13px] text-red-400 mt-1">{error}</p>
           )}
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleInstall}
               disabled={installing}
-              className="px-3 py-1.5 text-xs font-medium rounded bg-gold text-black hover:bg-gold/90 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium rounded bg-gold text-black hover:bg-gold/90 disabled:opacity-50 transition-colors"
             >
               {installing ? `Downloading ${progress}%` : "Install & restart"}
             </button>
             <button
               onClick={() => setUpdateAvailable(false)}
               disabled={installing}
-              className="px-3 py-1.5 text-xs font-medium rounded text-gray-400 hover:text-gray-200 transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium rounded text-gray-400 hover:text-gray-200 transition-colors"
             >
               Later
             </button>
