@@ -36,7 +36,7 @@ docker-compose.yml Web deployment + desktop resource provisioning
 ```bash
 git clone https://github.com/sortbek/simcraft.git
 cd simcraft
-docker compose up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 Docker handles everything automatically — compiles the Rust backend, builds SimC from source, fetches game data from Raidbots, and builds the Next.js frontend.
