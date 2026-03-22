@@ -37,6 +37,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Pin to a specific commit — Docker caches this layer until the hash changes.
 # Update SIMC_VERSION to rebuild with a newer SimC version.
 ARG SIMC_VERSION=HEAD
+
+# Hack: Automatically bust the Docker cache if the upstream repo branch changes its HEAD.
+# Docker hashes the contents downloaded from this ADD URL; if a new commit was pushed, it invalidates the clone layer beneath it!
+ADD https://api.github.com/repos/simulationcraft/simc/commits?per_page=1 /tmp/simc-version-buster.json
+
 RUN git clone --depth 1 https://github.com/simulationcraft/simc.git /tmp/simc \
     && cd /tmp/simc \
     && if [ "$SIMC_VERSION" != "HEAD" ]; then git fetch --depth 1 origin "$SIMC_VERSION" && git checkout FETCH_HEAD; fi \

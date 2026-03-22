@@ -39,7 +39,7 @@ export default function StatWeightsTable({
             <div className="flex justify-between text-[13px] mb-1.5">
               <span className="text-gray-300">{stat}</span>
               <span className="text-white font-mono tabular-nums">
-                {weight.toFixed(4)}
+                {weight.toFixed(1)}
               </span>
             </div>
             <div className="w-full bg-bg rounded-full h-1 overflow-hidden">

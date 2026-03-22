@@ -16,6 +16,7 @@ interface JobData {
   progress_stage?: string;
   progress_detail?: string;
   stages_completed?: string[];
+  logs?: string[];
   result: Record<string, unknown> | null;
   error: string | null;
 }
@@ -97,6 +98,7 @@ export default function SimResultClient() {
         progressStage={job.progress_stage}
         progressDetail={job.progress_detail}
         stagesCompleted={job.stages_completed}
+        logs={job.logs}
       />
     );
   }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
 
 use rusqlite::{params, Connection};
@@ -7,6 +8,7 @@ use super::JobStorage;
 
 pub struct SqliteStorage {
     conn: Mutex<Connection>,
+    logs: Mutex<HashMap<String, Vec<String>>>,
 }
 
 impl SqliteStorage {
@@ -32,7 +34,10 @@ impl SqliteStorage {
             );"
         ).expect("Failed to create jobs table");
 
-        Self { conn: Mutex::new(conn) }
+        Self {
+            conn: Mutex::new(conn),
+            logs: Mutex::new(HashMap::new()),
+        }
     }
 
     fn status_to_str(status: &JobStatus) -> &'static str {
@@ -74,6 +79,7 @@ impl SqliteStorage {
             fight_style: row.get(12)?,
             target_error: row.get(13)?,
             created_at: row.get(14)?,
+            logs: Vec::new(),
         })
     }
 }
@@ -116,7 +122,10 @@ impl JobStorage for SqliteStorage {
              FROM jobs WHERE id = ?1",
             params![id],
             Self::row_to_job,
-        ).ok()
+        ).ok().map(|mut job| {
+            job.logs = self.get_logs(id);
+            job
+        })
     }
 
     fn list(&self) -> Vec<Job> {
@@ -189,5 +198,14 @@ impl JobStorage for SqliteStorage {
             "UPDATE jobs SET error_message = ?1, status = 'failed' WHERE id = ?2",
             params![error, id],
         ).ok();
+    }
+
+    fn append_log(&self, id: &str, line: &str) {
+        let mut logs = self.logs.lock().unwrap();
+        logs.entry(id.to_string()).or_default().push(line.to_string());
+    }
+
+    fn get_logs(&self, id: &str) -> Vec<String> {
+        self.logs.lock().unwrap().get(id).cloned().unwrap_or_default()
     }
 }

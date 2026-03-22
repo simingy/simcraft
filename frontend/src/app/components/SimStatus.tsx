@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { API_URL } from "../lib/api";
 
 interface SimStatusProps {
@@ -9,6 +9,7 @@ interface SimStatusProps {
   progressStage?: string;
   progressDetail?: string;
   stagesCompleted?: string[];
+  logs?: string[];
 }
 
 /**
@@ -69,12 +70,18 @@ export default function SimStatus({
   progressStage,
   progressDetail,
   stagesCompleted,
+  logs,
 }: SimStatusProps) {
   const isRunning = status === "running";
   const displayProgress = useSmoothedProgress(progress);
   const cpuUsage = useCpuUsage(isRunning);
   const title = progressStage || (status === "pending" ? "Queued" : "Simulating");
   const hasStages = stagesCompleted && stagesCompleted.length > 0;
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-6">
@@ -127,6 +134,28 @@ export default function SimStatus({
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {logs !== undefined && (
+        <div className="w-full max-w-4xl mt-10 transition-all duration-500 opacity-100 translate-y-0">
+          <div className="rounded-xl overflow-hidden border border-border shadow-2xl bg-[#0a0a0a]">
+            {/* Terminal Header */}
+            <div className="flex items-center justify-center px-4 py-3 bg-[#111] border-b border-[#222]">
+              <div className="font-sans text-xs text-gray-500 select-none opacity-80 uppercase tracking-widest font-semibold">
+                Console
+              </div>
+            </div>
+            {/* Terminal Body */}
+            <div className="p-5 font-mono text-[12px] leading-relaxed text-gray-300 h-[32rem] overflow-y-auto whitespace-pre-wrap flex flex-col items-start text-left selection:bg-gray-700">
+              {logs.length > 0 ? (
+                logs.map(line => line.split('\r').pop()).filter(Boolean).join("\n")
+              ) : (
+                <span className="opacity-50 animate-pulse text-green-500">{">"} Waiting for simc stream...</span>
+              )}
+              <div ref={logEndRef} />
+            </div>
+          </div>
         </div>
       )}
     </div>

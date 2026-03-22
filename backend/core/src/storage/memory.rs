@@ -64,4 +64,14 @@ impl JobStorage for MemoryStorage {
             job.status = JobStatus::Failed;
         }
     }
+
+    fn append_log(&self, id: &str, line: &str) {
+        if let Some(job) = self.jobs.lock().unwrap().get_mut(id) {
+            job.logs.push(line.to_string());
+        }
+    }
+
+    fn get_logs(&self, id: &str) -> Vec<String> {
+        self.jobs.lock().unwrap().get(id).map(|j| j.logs.clone()).unwrap_or_default()
+    }
 }

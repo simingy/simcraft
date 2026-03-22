@@ -14,4 +14,6 @@ pub trait JobStorage: Send + Sync {
     fn complete_stage(&self, id: &str, summary: &str);
     fn set_result(&self, id: &str, result: String);
     fn set_error(&self, id: &str, error: String);
+    fn append_log(&self, id: &str, line: &str);
+    fn get_logs(&self, id: &str) -> Vec<String>;
 }

@@ -27,6 +27,7 @@ pub struct Job {
     pub fight_style: String,
     pub target_error: f64,
     pub created_at: String,
+    pub logs: Vec<String>,
 }
 
 impl Job {
@@ -53,6 +54,7 @@ impl Job {
             fight_style,
             target_error,
             created_at: chrono::Utc::now().to_rfc3339(),
+            logs: Vec::new(),
         }
     }
 }

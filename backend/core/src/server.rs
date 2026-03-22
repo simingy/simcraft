@@ -60,6 +60,8 @@ pub struct SimRequest {
     #[serde(default = "default_sim_type")]
     pub sim_type: String,
     #[serde(default)]
+    pub stat_weights: Option<Vec<String>>,
+    #[serde(default)]
     pub max_upgrade: bool,
     #[serde(default)]
     pub threads: u32,
@@ -177,13 +179,18 @@ async fn create_sim(
         "iterations": req.iterations,
         "sim_type": req.sim_type,
         "threads": req.threads,
+        "stat_weights": req.stat_weights,
     });
     let job_id_clone = job_id.clone();
 
     tokio::spawn(async move {
         store_clone.update_status(&job_id_clone, JobStatus::Running);
         store_clone.update_progress(&job_id_clone, 20, "Simulating", "");
-        match simc_runner::run_simc(&simc, &job_id_clone, &simc_input, &options).await {
+        let store_log = store_clone.clone();
+        let jid_log = job_id_clone.clone();
+        match simc_runner::run_simc(&simc, &job_id_clone, &simc_input, &options, move |line| {
+            store_log.append_log(&jid_log, line);
+        }).await {
             Ok(raw) => {
                 let parsed = result_parser::parse_simc_result(&raw);
                 let result_str = serde_json::to_string(&parsed).unwrap_or_default();
@@ -291,8 +298,10 @@ async fn create_top_gear_sim(
         store_clone.update_status(&job_id_clone, JobStatus::Running);
         let store_progress = store_clone.clone();
         let store_stages = store_clone.clone();
+        let store_log = store_clone.clone();
         let jid_progress = job_id_clone.clone();
         let jid_stages = job_id_clone.clone();
+        let jid_log = job_id_clone.clone();
         match simc_runner::run_simc_staged(
             &simc,
             &job_id_clone,
@@ -304,6 +313,9 @@ async fn create_top_gear_sim(
             },
             move |summary| {
                 store_stages.complete_stage(&jid_stages, summary);
+            },
+            move |line| {
+                store_log.append_log(&jid_log, line);
             },
         )
         .await
@@ -393,8 +405,10 @@ async fn create_droptimizer_sim(
         store_clone.update_status(&job_id_clone, JobStatus::Running);
         let store_progress = store_clone.clone();
         let store_stages = store_clone.clone();
+        let store_log = store_clone.clone();
         let jid_progress = job_id_clone.clone();
         let jid_stages = job_id_clone.clone();
+        let jid_log = job_id_clone.clone();
         match simc_runner::run_simc_staged(
             &simc,
             &job_id_clone,
@@ -406,6 +420,9 @@ async fn create_droptimizer_sim(
             },
             move |summary| {
                 store_stages.complete_stage(&jid_stages, summary);
+            },
+            move |line| {
+                store_log.append_log(&jid_log, line);
             },
         )
         .await
@@ -477,6 +494,7 @@ async fn get_sim_status(
         "stages_completed": job.stages_completed,
         "result": parsed_result,
         "error": job.error_message,
+        "logs": job.logs,
     }))
 }
 
