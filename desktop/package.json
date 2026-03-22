@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "npm run build:frontend && npm run build:backend && electron-builder",
+    "publish": "node scripts/publish.js",
     "build:frontend": "npm run --prefix ../frontend build:desktop && node scripts/copy-frontend.js",
     "build:backend": "node scripts/build-backend.js"
   },
@@ -43,11 +44,11 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.png"
     },
     "mac": {
       "target": "dmg",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.png"
     },
     "linux": {
       "target": ["AppImage", "deb"]

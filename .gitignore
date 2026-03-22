@@ -20,3 +20,4 @@ backend/resources/data/*.json
 backend/resources/simc/
 backend/resources/frontend/
 desktop/resources/
+desktop/dist/
