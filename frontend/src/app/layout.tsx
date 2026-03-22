@@ -4,7 +4,7 @@ import DesktopAppLink from "./components/DesktopAppLink";
 import SettingsPopover from "./components/SettingsPopover";
 import { SimProvider } from "./components/SimContext";
 import SimSharedConfig from "./components/SimSharedConfig";
-import SimTypeCards from "./components/SimTypeCards";
+import SidebarNav from "./components/SidebarNav";
 import UpdateChecker from "./components/UpdateChecker";
 import WindowControls from "./components/WindowTitlebar";
 import "./globals.css";
@@ -36,18 +36,18 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className="min-h-screen">
+      <body className="min-h-screen flex flex-col">
         <UpdateChecker />
         <SimProvider>
-          <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl desktop-drag">
-            <div className="px-6 h-12 flex items-center justify-between">
+          <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl desktop-drag shrink-0">
+            <div className="px-6 h-14 flex items-center justify-between">
               <a href="/" className="flex items-center gap-2 group desktop-no-drag">
-                <div className="w-6 h-6 rounded bg-gold/90 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-black" viewBox="0 0 16 16" fill="currentColor">
+                <div className="w-7 h-7 rounded bg-gold/90 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-black" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M3 2l10 6-10 6V2z" />
                   </svg>
                 </div>
-                <span className="text-base font-semibold text-gray-200 group-hover:text-white transition-colors">
+                <span className="text-lg font-semibold text-gray-100 group-hover:text-white transition-colors">
                   SimHammer
                 </span>
               </a>
@@ -58,11 +58,21 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          <main className="max-w-5xl mx-auto px-6 py-10">
-            <SimTypeCards />
-            <SimSharedConfig />
-            {children}
-          </main>
+          
+          <div className="flex flex-1 max-w-[1600px] mx-auto w-full">
+            {/* Left Sidebar Menu */}
+            <aside className="w-[260px] border-r border-border/50 shrink-0 hidden md:flex flex-col py-8 px-4">
+              <SidebarNav />
+            </aside>
+            
+            {/* Main Content Pane */}
+            <main className="flex-1 min-w-0 flex flex-col relative px-8 py-10">
+              <div className="w-full max-w-4xl mx-auto space-y-6">
+                <SimSharedConfig />
+                {children}
+              </div>
+            </main>
+          </div>
         </SimProvider>
         <footer className="border-t border-border/50 mt-16 py-8">
           <p className="text-center text-[13px] text-gray-400 max-w-2xl mx-auto leading-relaxed">

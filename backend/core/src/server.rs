@@ -495,6 +495,8 @@ async fn get_sim_status(
         "result": parsed_result,
         "error": job.error_message,
         "logs": job.logs,
+        "simc_input": job.simc_input,
+        "sim_type": job.sim_type,
     }))
 }
 

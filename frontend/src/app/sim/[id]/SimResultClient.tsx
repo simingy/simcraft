@@ -17,6 +17,8 @@ interface JobData {
   progress_detail?: string;
   stages_completed?: string[];
   logs?: string[];
+  simc_input?: string;
+  sim_type?: string;
   result: Record<string, unknown> | null;
   error: string | null;
 }
@@ -35,6 +37,7 @@ export default function SimResultClient() {
 
   const [job, setJob] = useState<JobData | null>(null);
   const [fetchError, setFetchError] = useState("");
+  const [isInputExpanded, setIsInputExpanded] = useState(false);
 
   useEffect(() => {
     if (!id || id === "_") return;
@@ -166,6 +169,35 @@ export default function SimResultClient() {
             />
           )}
         </>
+      )}
+
+      {job.simc_input && (
+        <div className="card p-5 mt-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-medium text-muted uppercase tracking-widest">
+              Simulation Input
+            </h3>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsInputExpanded(!isInputExpanded)}
+                className="text-xs text-muted hover:text-white transition-colors"
+              >
+                {isInputExpanded ? "Hide input" : "Show input"}
+              </button>
+              <button
+                onClick={() => navigator.clipboard.writeText(job.simc_input!)}
+                className="text-xs text-gold hover:text-white transition-colors"
+              >
+                Copy configuration
+              </button>
+            </div>
+          </div>
+          {isInputExpanded && (
+            <pre className="mt-4 font-mono text-[11px] leading-relaxed text-gray-300 bg-[#0a0a0a] border border-[#222] p-4 rounded-lg overflow-x-auto whitespace-pre">
+              {job.simc_input}
+            </pre>
+          )}
+        </div>
       )}
 
       <div className="flex items-center justify-center gap-3 text-xs text-muted pb-4">

@@ -37,7 +37,7 @@ export default function Home() {
     <div className="py-8 w-full max-w-3xl mx-auto space-y-12">
       <div className="text-center">
         <p className="text-sm text-muted">
-           Select a simulation type above to get started.
+           Select a simulation type from the left navigation menu to get started.
         </p>
       </div>
 

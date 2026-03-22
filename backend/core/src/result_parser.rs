@@ -74,12 +74,11 @@ pub fn parse_simc_result(raw: &Value) -> Value {
     });
 
     // Ability breakdown
-    let stats = player.get("stats").and_then(|s| s.as_array());
-    if let Some(stats) = stats {
-        let mut abilities: Vec<Value> = Vec::new();
-        for stat in stats {
+    fn parse_stats_grouped(stats_array: &[Value]) -> Vec<Value> {
+        let mut results = Vec::new();
+        for stat in stats_array {
             let name = stat.get("name").and_then(|n| n.as_str()).unwrap_or("");
-            let dps_contribution = if let Some(portion_aps) = stat.get("portion_aps") {
+            let self_dps = if let Some(portion_aps) = stat.get("portion_aps") {
                 if let Some(obj) = portion_aps.as_object() {
                     obj.get("mean").and_then(|m| m.as_f64()).unwrap_or(0.0)
                 } else {
@@ -88,22 +87,79 @@ pub fn parse_simc_result(raw: &Value) -> Value {
             } else {
                 0.0
             };
+
             let school = stat
                 .get("school")
                 .and_then(|s| s.as_str())
                 .unwrap_or("physical");
 
-            if !name.is_empty() && dps_contribution > 0.0 {
-                abilities.push(json!({
+            let children = stat
+                .get("children")
+                .and_then(|c| c.as_array())
+                .map(|c| parse_stats_grouped(c))
+                .unwrap_or_else(Vec::new);
+
+            if !name.is_empty() && (self_dps > 0.0 || !children.is_empty()) {
+                let mut total_dps = self_dps;
+                for child in &children {
+                    total_dps += child.get("portion_dps").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                }
+
+                let mut stat_json = json!({
                     "name": name,
-                    "portion_dps": round1(dps_contribution),
+                    "portion_dps": round1(total_dps),
+                    "self_dps": round1(self_dps),
                     "school": school,
-                }));
+                });
+
+                if !children.is_empty() {
+                    stat_json["children"] = json!(children);
+                }
+
+                results.push(stat_json);
             }
         }
+
+        // Sort results by total portion_dps descending
+        results.sort_by(|a, b| {
+            let a_dps = a.get("portion_dps").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let b_dps = b.get("portion_dps").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            b_dps.partial_cmp(&a_dps).unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        results
+    }
+
+    let mut abilities = if let Some(stats) = player.get("stats").and_then(|s| s.as_array()) {
+        parse_stats_grouped(stats)
+    } else {
+        Vec::new()
+    };
+
+    if let Some(pets) = player.get("pets").and_then(|p| p.as_array()) {
+        for pet in pets {
+            let pet_name = pet.get("name").and_then(|n| n.as_str()).unwrap_or("Pet");
+            if let Some(pet_stats) = pet.get("stats").and_then(|s| s.as_array()) {
+                let children = parse_stats_grouped(pet_stats);
+                if !children.is_empty() {
+                    let total_dps: f64 = children.iter().map(|c| c.get("portion_dps").and_then(|v| v.as_f64()).unwrap_or(0.0)).sum();
+                    
+                    abilities.push(json!({
+                        "name": pet_name,
+                        "portion_dps": round1(total_dps),
+                        "self_dps": 0.0,
+                        "school": "physical",
+                        "children": children
+                    }));
+                }
+            }
+        }
+    }
+
+    if !abilities.is_empty() {
         abilities.sort_by(|a, b| {
-            let a_dps = a["portion_dps"].as_f64().unwrap_or(0.0);
-            let b_dps = b["portion_dps"].as_f64().unwrap_or(0.0);
+            let a_dps = a.get("portion_dps").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let b_dps = b.get("portion_dps").and_then(|v| v.as_f64()).unwrap_or(0.0);
             b_dps.partial_cmp(&a_dps).unwrap_or(std::cmp::Ordering::Equal)
         });
         result["abilities"] = json!(abilities);
