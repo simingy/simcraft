@@ -219,7 +219,7 @@ export function useGemInfo(gemIds: number[]): Record<number, GemInfo> {
 }
 
 export function getIconUrl(iconName: string): string {
-  return `https://wow.zamimg.com/images/wow/icons/medium/${iconName}.jpg`;
+  return `https://render.worldofwarcraft.com/icons/56/${iconName}.jpg`;
 }
 
 export function getWowheadUrl(itemId: number): string {

@@ -2,6 +2,11 @@
   "name": "simhammer-desktop",
   "version": "1.7.0",
   "private": true,
+  "homepage": "https://simhammer.com",
+  "author": {
+    "name": "sortbek",
+    "email": "simhammer@sortbek.com"
+  },
   "main": "main.js",
   "scripts": {
     "dev": "node scripts/dev.js",

@@ -446,7 +446,7 @@ export default function DropFinderPage() {
                       }`}
                     >
                       <img
-                        src={`https://wow.zamimg.com/images/wow/icons/small/${item.icon}.jpg`}
+                        src={`https://render.worldofwarcraft.com/icons/56/${item.icon}.jpg`}
                         alt=""
                         className="w-6 h-6 rounded"
                       />
