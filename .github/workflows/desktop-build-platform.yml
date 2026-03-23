@@ -74,14 +74,18 @@ jobs:
       - name: Fetch game data
         shell: bash
         run: |
-          mkdir -p backend/resources/data
-          cd backend/resources/data
+          mkdir -p backend/resources/data-full
+          cd backend/resources/data-full
           curl -sL -o metadata.json https://www.raidbots.com/static/data/live/metadata.json
           for f in $(node -e "const m=require('./metadata.json'); m.files.forEach(f=>console.log(f))"); do
             echo "  $f"
             curl -sL -o "$f" "https://www.raidbots.com/static/data/live/$f"
           done
           cp ../../core/season-config.json ./season-config.json 2>/dev/null || true
+
+      - name: Compact game data
+        shell: bash
+        run: node backend/scripts/compact-data.js backend/resources/data-full backend/resources/data
 
       # -- Frontend --
       - name: Install frontend dependencies

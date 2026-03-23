@@ -3,4 +3,4 @@ members = ["core", "server"]
 resolver = "2"
 
 [workspace.package]
-version = "1.5.0"
+version = "1.8.0"

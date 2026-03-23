@@ -10,17 +10,21 @@ COPY server/ server/
 ARG CARGO_FEATURES=
 RUN cargo build --release -p simhammer-server ${CARGO_FEATURES:+--features $CARGO_FEATURES}
 
-# --- Fetch game data from Raidbots ---
-FROM debian:bookworm-slim AS fetcher
+# --- Fetch game data from Raidbots and compact ---
+FROM node:20-slim AS fetcher
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl jq ca-certificates && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /data
+WORKDIR /data/full
 RUN curl -sL -o metadata.json https://www.raidbots.com/static/data/live/metadata.json \
     && for f in $(jq -r '.files[]' metadata.json); do \
          echo "Downloading $f"; \
          curl -sL -o "$f" "https://www.raidbots.com/static/data/live/$f"; \
        done
+
+COPY scripts/compact-data.js /compact-data.js
+COPY core/season-config.json /data/full/season-config.json
+RUN node /compact-data.js /data/full /data/compact
 
 # --- Build SimulationCraft from source ---
 FROM debian:bookworm-slim AS simc-builder
@@ -53,8 +57,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 COPY --from=builder /build/target/release/simhammer-server /usr/local/bin/simhammer-server
 COPY --from=simc-builder /usr/local/bin/simc /usr/local/bin/simc
-COPY --from=fetcher /data /app/resources/data
-COPY core/season-config.json /app/resources/data/season-config.json
+COPY --from=fetcher /data/compact /app/resources/data
 
 WORKDIR /app
 ENV DATA_DIR=/app/resources/data
