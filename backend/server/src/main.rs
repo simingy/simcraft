@@ -36,9 +36,23 @@ async fn main() {
         println!("Starting SimHammer in desktop mode on {}:{}", bind_host, port);
         Arc::new(simhammer_core::storage::memory::MemoryStorage::new())
     } else {
-        let db_path = env_or("DATABASE_URL", "simhammer.db");
+        let db_url = env_or("DATABASE_URL", "simhammer.db");
         println!("Starting SimHammer server on {}:{}", bind_host, port);
-        Arc::new(simhammer_core::storage::sqlite::SqliteStorage::new(&db_path))
+
+        #[cfg(feature = "postgres")]
+        if db_url.starts_with("postgres://") || db_url.starts_with("postgresql://") {
+            println!("Using PostgreSQL storage");
+            Arc::new(simhammer_core::storage::postgres::PostgresStorage::new(&db_url).await)
+        } else {
+            println!("Using SQLite storage: {}", db_url);
+            Arc::new(simhammer_core::storage::sqlite::SqliteStorage::new(&db_url))
+        }
+
+        #[cfg(not(feature = "postgres"))]
+        {
+            println!("Using SQLite storage: {}", db_url);
+            Arc::new(simhammer_core::storage::sqlite::SqliteStorage::new(&db_url))
+        }
     };
 
     server::start_with_storage_bind(storage, simc_path, &bind_host, port, frontend_dir).await;

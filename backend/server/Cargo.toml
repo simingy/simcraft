@@ -6,6 +6,7 @@ edition = "2021"
 [features]
 default = []
 desktop = ["simhammer-core/desktop"]
+postgres = ["simhammer-core/postgres"]
 
 [dependencies]
 simhammer-core = { path = "../core", features = ["web"] }

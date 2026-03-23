@@ -1,0 +1,207 @@
+use std::sync::Mutex;
+
+use tokio_postgres::{Client, NoTls};
+
+use crate::models::{Job, JobStatus};
+use super::JobStorage;
+
+pub struct PostgresStorage {
+    client: Mutex<Client>,
+}
+
+impl PostgresStorage {
+    /// Connect to PostgreSQL and create the jobs table if needed.
+    /// `url` should be a full connection string, e.g. "host=localhost user=simhammer dbname=simhammer"
+    /// or "postgres://simhammer:pass@localhost/simhammer".
+    pub async fn new(url: &str) -> Self {
+        let (client, connection) = tokio_postgres::connect(url, NoTls)
+            .await
+            .expect("Failed to connect to PostgreSQL");
+
+        // Spawn the connection handler
+        tokio::spawn(async move {
+            if let Err(e) = connection.await {
+                eprintln!("PostgreSQL connection error: {}", e);
+            }
+        });
+
+        client.batch_execute(
+            "CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                status TEXT NOT NULL DEFAULT 'pending',
+                sim_type TEXT NOT NULL,
+                simc_input TEXT NOT NULL,
+                result_json TEXT,
+                combo_metadata_json TEXT,
+                error_message TEXT,
+                progress_pct INTEGER NOT NULL DEFAULT 0,
+                progress_stage TEXT,
+                progress_detail TEXT,
+                stages_completed TEXT NOT NULL DEFAULT '[]',
+                iterations INTEGER NOT NULL,
+                fight_style TEXT NOT NULL,
+                target_error DOUBLE PRECISION NOT NULL,
+                created_at TEXT NOT NULL
+            );"
+        ).await.expect("Failed to create jobs table");
+
+        Self { client: Mutex::new(client) }
+    }
+
+    fn status_to_str(status: &JobStatus) -> &'static str {
+        match status {
+            JobStatus::Pending => "pending",
+            JobStatus::Running => "running",
+            JobStatus::Done => "done",
+            JobStatus::Failed => "failed",
+        }
+    }
+
+    fn str_to_status(s: &str) -> JobStatus {
+        match s {
+            "running" => JobStatus::Running,
+            "done" => JobStatus::Done,
+            "failed" => JobStatus::Failed,
+            _ => JobStatus::Pending,
+        }
+    }
+
+    fn row_to_job(row: &tokio_postgres::Row) -> Job {
+        let status_str: String = row.get(1);
+        let stages_str: String = row.get(10);
+        let stages: Vec<String> = serde_json::from_str(&stages_str).unwrap_or_default();
+        let progress_pct: i32 = row.get(7);
+        let iterations: i32 = row.get(11);
+
+        Job {
+            id: row.get(0),
+            status: Self::str_to_status(&status_str),
+            sim_type: row.get(2),
+            simc_input: row.get(3),
+            result_json: row.get(4),
+            combo_metadata_json: row.get(5),
+            error_message: row.get(6),
+            progress_pct: progress_pct as u8,
+            progress_stage: row.get(8),
+            progress_detail: row.get(9),
+            stages_completed: stages,
+            iterations: iterations as u32,
+            fight_style: row.get(12),
+            target_error: row.get(13),
+            created_at: row.get(14),
+        }
+    }
+}
+
+impl JobStorage for PostgresStorage {
+    fn insert(&self, job: Job) {
+        let client = self.client.lock().unwrap();
+        let stages_json = serde_json::to_string(&job.stages_completed).unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            client.execute(
+                "INSERT INTO jobs (id, status, sim_type, simc_input, result_json, combo_metadata_json,
+                 error_message, progress_pct, progress_stage, progress_detail, stages_completed,
+                 iterations, fight_style, target_error, created_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)",
+                &[
+                    &job.id,
+                    &Self::status_to_str(&job.status),
+                    &job.sim_type,
+                    &job.simc_input,
+                    &job.result_json,
+                    &job.combo_metadata_json,
+                    &job.error_message,
+                    &(job.progress_pct as i32),
+                    &job.progress_stage,
+                    &job.progress_detail,
+                    &stages_json,
+                    &(job.iterations as i32),
+                    &job.fight_style,
+                    &job.target_error,
+                    &job.created_at,
+                ],
+            ).await.expect("Failed to insert job");
+        });
+    }
+
+    fn get(&self, id: &str) -> Option<Job> {
+        let client = self.client.lock().unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            client.query_opt(
+                "SELECT id, status, sim_type, simc_input, result_json, combo_metadata_json,
+                 error_message, progress_pct, progress_stage, progress_detail, stages_completed,
+                 iterations, fight_style, target_error, created_at
+                 FROM jobs WHERE id = $1",
+                &[&id],
+            ).await.ok().flatten().map(|row| Self::row_to_job(&row))
+        })
+    }
+
+    fn update_status(&self, id: &str, status: JobStatus) {
+        let client = self.client.lock().unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            client.execute(
+                "UPDATE jobs SET status = $1 WHERE id = $2",
+                &[&Self::status_to_str(&status), &id],
+            ).await.ok();
+        });
+    }
+
+    fn update_progress(&self, id: &str, pct: u8, stage: &str, detail: &str) {
+        let client = self.client.lock().unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            client.execute(
+                "UPDATE jobs SET progress_pct = $1, progress_stage = $2, progress_detail = $3 WHERE id = $4",
+                &[&(pct as i32), &stage, &detail, &id],
+            ).await.ok();
+        });
+    }
+
+    fn complete_stage(&self, id: &str, summary: &str) {
+        let client = self.client.lock().unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            let row = client.query_opt(
+                "SELECT stages_completed FROM jobs WHERE id = $1",
+                &[&id],
+            ).await.ok().flatten();
+
+            if let Some(row) = row {
+                let stages_str: String = row.get(0);
+                let mut stages: Vec<String> = serde_json::from_str(&stages_str).unwrap_or_default();
+                stages.push(summary.to_string());
+                let updated = serde_json::to_string(&stages).unwrap();
+                client.execute(
+                    "UPDATE jobs SET stages_completed = $1 WHERE id = $2",
+                    &[&updated, &id],
+                ).await.ok();
+            }
+        });
+    }
+
+    fn set_result(&self, id: &str, result: String) {
+        let client = self.client.lock().unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            client.execute(
+                "UPDATE jobs SET result_json = $1, status = 'done' WHERE id = $2",
+                &[&result, &id],
+            ).await.ok();
+        });
+    }
+
+    fn set_error(&self, id: &str, error: String) {
+        let client = self.client.lock().unwrap();
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            client.execute(
+                "UPDATE jobs SET error_message = $1, status = 'failed' WHERE id = $2",
+                &[&error, &id],
+            ).await.ok();
+        });
+    }
+}
