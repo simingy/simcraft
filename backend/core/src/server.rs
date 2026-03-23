@@ -65,6 +65,8 @@ pub struct SimOptions {
     pub threads: u32,
     #[serde(default)]
     pub talents: String,
+    #[serde(default)]
+    pub custom_simc: String,
 }
 
 impl SimOptions {
@@ -146,6 +148,25 @@ fn default_sim_type() -> String { "quick".to_string() }
 fn default_desired_targets() -> u32 { 1 }
 fn default_max_time() -> u32 { 300 }
 
+/// Sanitize user-provided custom SimC input by stripping dangerous directives.
+fn sanitize_custom_simc(input: &str) -> String {
+    let blocked = regex::Regex::new(r"(?mi)^\s*(output|html|json2?|xml)\s*=").unwrap();
+    input
+        .lines()
+        .filter(|line| !blocked.is_match(line))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Append custom SimC input to the end of a simc profile string.
+fn append_custom_simc(simc_input: &str, custom_simc: &str) -> String {
+    let sanitized = sanitize_custom_simc(custom_simc);
+    if sanitized.trim().is_empty() {
+        return simc_input.to_string();
+    }
+    format!("{}\n\n# Custom SimC options\n{}", simc_input, sanitized)
+}
+
 /// Replace the talents= line in a simc input string with a new talent string.
 fn apply_talent_override(simc_input: &str, talents: &str) -> String {
     if talents.is_empty() {
@@ -222,6 +243,7 @@ async fn create_sim(
         req.simc_input.clone()
     };
     simc_input = apply_talent_override(&simc_input, &req.options.talents);
+    simc_input = append_custom_simc(&simc_input, &req.options.custom_simc);
 
     let job = Job::new(
         simc_input.clone(),
@@ -315,6 +337,8 @@ async fn create_top_gear_sim(
         }));
     }
 
+    let generated_input = append_custom_simc(&generated_input, &req.options.custom_simc);
+
     let job = Job::new(
         generated_input.clone(),
         "top_gear".to_string(),
@@ -373,6 +397,8 @@ async fn create_droptimizer_sim(
             "detail": "No items selected. Select at least one drop item."
         }));
     }
+
+    let generated_input = append_custom_simc(&generated_input, &req.options.custom_simc);
 
     let job = Job::new(
         generated_input.clone(),

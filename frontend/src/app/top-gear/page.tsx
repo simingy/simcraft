@@ -13,7 +13,7 @@ import {
 import { API_URL } from "../lib/api";
 
 export default function TopGearPage() {
-  const { simcInput, fightStyle, threads, selectedTalent, targetCount, fightLength } = useSimContext();
+  const { simcInput, fightStyle, threads, selectedTalent, targetCount, fightLength, customSimc } = useSimContext();
   const [itemsBySlot, setItemsBySlot] = useState<ItemsBySlot | null>(null);
   const [selectedItems, setSelectedItems] = useState<Record<string, number[]>>(
     {}
@@ -76,6 +76,7 @@ export default function TopGearPage() {
           copy_enchants: copyEnchants,
           threads,
           ...(selectedTalent ? { talents: selectedTalent } : {}),
+          ...(customSimc ? { custom_simc: customSimc } : {}),
         }),
       });
       if (!res.ok) {

@@ -20,10 +20,10 @@ function parseCharacterInfo(input: string) {
 
 function AdvancedOptions() {
   const [open, setOpen] = useState(false);
-  const { fightStyle, setFightStyle, targetCount, setTargetCount, fightLength, setFightLength } =
+  const { fightStyle, setFightStyle, targetCount, setTargetCount, fightLength, setFightLength, customSimc, setCustomSimc } =
     useSimContext();
 
-  const isDefault = fightStyle === "Patchwerk" && targetCount === 1 && fightLength === 300;
+  const isDefault = fightStyle === "Patchwerk" && targetCount === 1 && fightLength === 300 && !customSimc;
 
   return (
     <div className="card overflow-hidden">
@@ -88,6 +88,18 @@ function AdvancedOptions() {
                 <span className="text-sm font-mono text-white tabular-nums w-16 text-right">{Math.floor(fightLength / 60)}:{String(fightLength % 60).padStart(2, "0")}</span>
               </div>
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="label-text">Custom SimC Input</label>
+            <textarea
+              value={customSimc}
+              onChange={(e) => setCustomSimc(e.target.value)}
+              placeholder="Paste custom SimC options here (e.g., dungeon route, APL overrides)…"
+              className="input-field h-28 font-mono text-xs resize-y"
+            />
+            <p className="text-[11px] text-gray-600">
+              Appended to the end of the SimC profile. Useful for dungeon routes, custom APL, or fight overrides.
+            </p>
           </div>
         </div>
       )}
