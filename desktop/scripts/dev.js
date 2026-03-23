@@ -10,6 +10,19 @@ const FRONTEND_DIR = path.join(ROOT, "frontend");
 const ext = process.platform === "win32" ? ".exe" : "";
 const serverBinary = path.join(BACKEND_DIR, "target", "debug", `simhammer-server${ext}`);
 
+function findNewestMtime(dir, extension) {
+  let newest = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory() && entry.name !== "target" && entry.name !== "node_modules") {
+      newest = Math.max(newest, findNewestMtime(full, extension));
+    } else if (entry.isFile() && entry.name.endsWith(extension)) {
+      newest = Math.max(newest, fs.statSync(full).mtimeMs);
+    }
+  }
+  return newest;
+}
+
 function buildBackend() {
   console.log("[dev] Building Rust backend...");
   execSync("cargo build -p simhammer-server --features desktop", {
@@ -64,15 +77,16 @@ async function main() {
   // 0. Ensure game data and simc binary exist
   ensureResources();
 
-  // 1. Build backend if binary doesn't exist
+  // 1. Build backend if binary doesn't exist or any source changed
   if (!fs.existsSync(serverBinary)) {
     buildBackend();
   } else {
-    // Rebuild if source is newer than binary
+    // Rebuild if any .rs source file is newer than the binary
     try {
-      const binaryStat = fs.statSync(serverBinary);
-      const mainStat = fs.statSync(path.join(BACKEND_DIR, "server", "src", "main.rs"));
-      if (mainStat.mtimeMs > binaryStat.mtimeMs) {
+      const binaryMtime = fs.statSync(serverBinary).mtimeMs;
+      const sourceChanged = findNewestMtime(BACKEND_DIR, ".rs") > binaryMtime
+        || findNewestMtime(BACKEND_DIR, ".toml") > binaryMtime;
+      if (sourceChanged) {
         buildBackend();
       } else {
         console.log("[dev] Backend binary up to date.");

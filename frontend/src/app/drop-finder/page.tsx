@@ -93,7 +93,7 @@ function detectSpec(simcInput: string): string | null {
 }
 
 export default function DropFinderPage() {
-  const { simcInput, fightStyle, threads, selectedTalent } = useSimContext();
+  const { simcInput, fightStyle, threads, selectedTalent, targetCount, fightLength } = useSimContext();
   const [instances, setInstances] = useState<Instance[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [drops, setDrops] = useState<Record<string, DropItem[]> | null>(null);
@@ -186,6 +186,8 @@ export default function DropFinderPage() {
           iterations: 10000,
           fight_style: fightStyle,
           target_error: 0.1,
+          desired_targets: targetCount,
+          max_time: fightLength,
           threads,
           ...(selectedTalent ? { talents: selectedTalent } : {}),
         }),

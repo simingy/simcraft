@@ -72,8 +72,6 @@ const SIM_OPTIONS: &[&str] = &[
     "report_details=1",
     "single_actor_batch=1",
     "optimize_expressions=1",
-    "desired_targets=1",
-    "max_time=300",
     "temporary_enchant=",
     "scale_only=strength,intellect,agility,crit,mastery,vers,haste,weapon_dps,weapon_offhand_dps",
 ];
@@ -110,6 +108,8 @@ async fn run_simc_subprocess(
     target_error: f64,
     iterations: u32,
     threads: u32,
+    desired_targets: u32,
+    max_time: u32,
     calculate_scale_factors: bool,
     stage_name: &str,
     on_profileset_progress: impl Fn(usize, usize),
@@ -157,7 +157,9 @@ async fn run_simc_subprocess(
         .arg(format!(
             "calculate_scale_factors={}",
             if calculate_scale_factors { "1" } else { "0" }
-        ));
+        ))
+        .arg(format!("desired_targets={}", desired_targets))
+        .arg(format!("max_time={}", max_time));
 
     for opt in OVERRIDES {
         cmd.arg(*opt);
@@ -172,7 +174,7 @@ async fn run_simc_subprocess(
     cmd.stdout(std::process::Stdio::piped());
     cmd.stderr(std::process::Stdio::piped());
 
-    println!("Running simc: {} (threads={}, affinity limited)", simc_path.display(), threads);
+    println!("Running simc: {} (threads={}, desired_targets={}, max_time={}, affinity limited)", simc_path.display(), threads, desired_targets, max_time);
 
     let mut child = cmd
         .spawn()
@@ -345,6 +347,14 @@ pub async fn run_simc(
         .and_then(|v| v.as_str())
         == Some("stat_weights");
     let threads = resolve_threads(options);
+    let desired_targets = options
+        .get("desired_targets")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(1) as u32;
+    let max_time = options
+        .get("max_time")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(300) as u32;
 
     run_simc_subprocess(
         simc_path,
@@ -354,6 +364,8 @@ pub async fn run_simc(
         target_error,
         iterations,
         threads,
+        desired_targets,
+        max_time,
         calculate_scale_factors,
         "",
         |_, _| {}, // Quick sim has no profilesets to track
@@ -380,6 +392,14 @@ pub async fn run_simc_staged(
         .and_then(|v| v.as_u64())
         .unwrap_or(1000) as u32;
     let threads = resolve_threads(options);
+    let desired_targets = options
+        .get("desired_targets")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(1) as u32;
+    let max_time = options
+        .get("max_time")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(300) as u32;
 
     if combo_count < STAGED_THRESHOLD {
         on_progress(5, "Simulating", &format!("{} combos", combo_count));
@@ -395,6 +415,8 @@ pub async fn run_simc_staged(
             target_error,
             user_iterations,
             threads,
+            desired_targets,
+            max_time,
             false,
             "direct",
             |current, total| {
@@ -450,6 +472,8 @@ pub async fn run_simc_staged(
             stage.target_error,
             stage_iterations[stage_idx],
             threads,
+            desired_targets,
+            max_time,
             false,
             &stage.name.to_lowercase(),
             |current, total| {

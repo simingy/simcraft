@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSimContext } from "./SimContext";
 import FightStyleSelector from "./FightStyleSelector";
@@ -17,14 +18,89 @@ function parseCharacterInfo(input: string) {
   };
 }
 
-export default function SimSharedConfig() {
-  const pathname = usePathname();
-  const { simcInput, setSimcInput, fightStyle, setFightStyle } =
+function AdvancedOptions() {
+  const [open, setOpen] = useState(false);
+  const { fightStyle, setFightStyle, targetCount, setTargetCount, fightLength, setFightLength } =
     useSimContext();
 
-  const isSimPage = pathname === "/quick-sim" || pathname === "/top-gear";
-  const isDropFinder = pathname === "/drop-finder";
-  if (!isSimPage && !isDropFinder) return null;
+  const isDefault = fightStyle === "Patchwerk" && targetCount === 1 && fightLength === 300;
+
+  return (
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-300">Advanced Options</span>
+          {!open && !isDefault && (
+            <span className="text-[11px] text-gold bg-gold/10 px-1.5 py-0.5 rounded">
+              Modified
+            </span>
+          )}
+        </div>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4 6l4 4 4-4" />
+        </svg>
+      </button>
+      {open && (
+        <div className="px-5 pb-5 space-y-4 border-t border-border">
+          <div className="pt-4">
+            <label className="label-text mb-2 block">Fight Style</label>
+            <FightStyleSelector value={fightStyle} onChange={setFightStyle} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="label-text">Number of Bosses</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  value={targetCount}
+                  onChange={(e) => setTargetCount(Number(e.target.value))}
+                  className="flex-1 accent-gold"
+                />
+                <span className="text-sm font-mono text-white tabular-nums w-6 text-right">{targetCount}</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="label-text">Fight Length</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={30}
+                  max={600}
+                  step={30}
+                  value={fightLength}
+                  onChange={(e) => setFightLength(Number(e.target.value))}
+                  className="flex-1 accent-gold"
+                />
+                <span className="text-sm font-mono text-white tabular-nums w-16 text-right">{Math.floor(fightLength / 60)}:{String(fightLength % 60).padStart(2, "0")}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function SimSharedConfig() {
+  const pathname = usePathname();
+  const { simcInput, setSimcInput } = useSimContext();
+
+  const showConfig = pathname === "/quick-sim" || pathname === "/top-gear" || pathname === "/drop-finder";
+  if (!showConfig) return null;
 
   const detectedInfo = parseCharacterInfo(simcInput);
 
@@ -44,13 +120,11 @@ export default function SimSharedConfig() {
               {detectedInfo.name} &middot; {detectedInfo.spec}{" "}
               {detectedInfo.className}
             </p>
-            {isSimPage && <TalentPicker />}
+            <TalentPicker />
           </div>
         )}
       </div>
-      {isSimPage && (
-        <FightStyleSelector value={fightStyle} onChange={setFightStyle} />
-      )}
+      <AdvancedOptions />
     </div>
   );
 }

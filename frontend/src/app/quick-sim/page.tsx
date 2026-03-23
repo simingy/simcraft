@@ -5,8 +5,7 @@ import { useSimContext } from "../components/SimContext";
 import { API_URL } from "../lib/api";
 
 export default function QuickSimPage() {
-  const { simcInput, fightStyle, threads, selectedTalent } = useSimContext();
-  const [simType, setSimType] = useState<"quick" | "stat_weights">("quick");
+  const { simcInput, fightStyle, threads, selectedTalent, targetCount, fightLength } = useSimContext();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,7 +26,9 @@ export default function QuickSimPage() {
           iterations: 10000,
           fight_style: fightStyle,
           target_error: 0.1,
-          sim_type: simType,
+          sim_type: "quick",
+          desired_targets: targetCount,
+          max_time: fightLength,
           threads,
           ...(selectedTalent ? { talents: selectedTalent } : {}),
         }),
@@ -47,23 +48,6 @@ export default function QuickSimPage() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex gap-2">
-        {(["quick", "stat_weights"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setSimType(t)}
-            className={`flex-1 py-2.5 px-3 rounded-lg text-[13px] font-medium transition-all border ${
-              simType === t
-                ? "bg-white text-black border-white"
-                : "bg-surface-2 text-gray-400 border-border hover:border-gray-500 hover:text-white"
-            }`}
-          >
-            {t === "quick" ? "Quick Sim" : "Stat Weights"}
-          </button>
-        ))}
-      </div>
-
       {error && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
           {error}
