@@ -17,7 +17,20 @@ interface TrackInfo {
   ilvl: number;
   bonus_id: number;
   quality: number;
+  track?: string;
+  level?: number;
+  max_level?: number;
 }
+
+interface TrackLevel {
+  level: number;
+  max_level: number;
+  ilvl: number;
+  bonus_id: number;
+  quality: number;
+}
+
+type UpgradeTracks = Record<string, TrackLevel[]>;
 
 interface DropItem {
   item_id: number;
@@ -27,6 +40,7 @@ interface DropItem {
   ilevel: number;
   encounter: string;
   inventory_type?: number;
+  bonus_ids?: number[];
   difficulty_info?: Record<string, TrackInfo>;
   dungeon_info?: Record<string, TrackInfo>;
 }
@@ -87,13 +101,39 @@ function effectiveBonusId(item: DropItem, raidDiff: Difficulty, dungeonDiff: str
   return getTrackInfo(item, raidDiff, dungeonDiff)?.bonus_id;
 }
 
+function resolveUpgrade(
+  item: DropItem,
+  raidDiff: Difficulty,
+  dungeonDiff: string,
+  upgradeLevel: number,
+  tracks: UpgradeTracks
+): { ilvl: number; bonus_id: number; quality: number } {
+  const base = getTrackInfo(item, raidDiff, dungeonDiff);
+  if (!base || !base.track || upgradeLevel <= 0) {
+    return {
+      ilvl: base?.ilvl ?? item.ilevel,
+      bonus_id: base?.bonus_id ?? 0,
+      quality: base?.quality ?? item.quality,
+    };
+  }
+  const trackLevels = tracks[base.track];
+  if (!trackLevels) {
+    return { ilvl: base.ilvl, bonus_id: base.bonus_id, quality: base.quality };
+  }
+  const target = trackLevels.find((t) => t.level === upgradeLevel);
+  if (!target) {
+    return { ilvl: base.ilvl, bonus_id: base.bonus_id, quality: base.quality };
+  }
+  return { ilvl: target.ilvl, bonus_id: target.bonus_id, quality: target.quality };
+}
+
 function detectSpec(simcInput: string): string | null {
   const m = simcInput.match(/^spec=(\w+)/m);
   return m ? m[1] : null;
 }
 
 export default function DropFinderPage() {
-  const { simcInput, fightStyle, threads, selectedTalent } = useSimContext();
+  const { simcInput, fightStyle, threads, selectedTalent, targetCount, fightLength, customSimc } = useSimContext();
   const [instances, setInstances] = useState<Instance[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [drops, setDrops] = useState<Record<string, DropItem[]> | null>(null);
@@ -103,15 +143,36 @@ export default function DropFinderPage() {
   const [error, setError] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("heroic");
   const [dungeonDiff, setDungeonDiff] = useState("mythic+10");
+  const [upgradeTracks, setUpgradeTracks] = useState<UpgradeTracks>({});
+  const [upgradeLevel, setUpgradeLevel] = useState<number>(0); // 0 = use base level from difficulty
 
   const className = useMemo(() => detectClass(simcInput), [simcInput]);
   const specName = useMemo(() => detectSpec(simcInput), [simcInput]);
   const hasCharacter = simcInput.trim().length >= 10;
 
+  // Determine available upgrade levels from the current difficulty's track
+  const currentTrackInfo = useMemo(() => {
+    if (!drops) return null;
+    // Find the track from the first item with track info
+    for (const items of Object.values(drops)) {
+      for (const item of items) {
+        const info = getTrackInfo(item, difficulty, dungeonDiff);
+        if (info?.track && upgradeTracks[info.track]) {
+          return { name: info.track, levels: upgradeTracks[info.track], baseLevel: info.level ?? 1 };
+        }
+      }
+    }
+    return null;
+  }, [drops, difficulty, dungeonDiff, upgradeTracks]);
+
   useEffect(() => {
     fetch(`${API_URL}/api/instances`)
       .then((r) => r.json())
       .then(setInstances)
+      .catch(() => {});
+    fetch(`${API_URL}/api/upgrade-tracks`)
+      .then((r) => r.json())
+      .then(setUpgradeTracks)
       .catch(() => {});
   }, []);
 
@@ -172,7 +233,13 @@ export default function DropFinderPage() {
       for (const items of Object.values(drops)) {
         for (const item of items) {
           if (selected.has(item.item_id)) {
-            dropItems.push({ ...item, ilevel: effectiveIlvl(item, difficulty, dungeonDiff) });
+            const resolved = resolveUpgrade(item, difficulty, dungeonDiff, upgradeLevel, upgradeTracks);
+            dropItems.push({
+              ...item,
+              ilevel: resolved.ilvl,
+              quality: resolved.quality,
+              bonus_ids: resolved.bonus_id ? [resolved.bonus_id] : [],
+            });
           }
         }
       }
@@ -186,8 +253,11 @@ export default function DropFinderPage() {
           iterations: 10000,
           fight_style: fightStyle,
           target_error: 0.1,
+          desired_targets: targetCount,
+          max_time: fightLength,
           threads,
           ...(selectedTalent ? { talents: selectedTalent } : {}),
+          ...(customSimc ? { custom_simc: customSimc } : {}),
         }),
       });
       if (!res.ok) {
@@ -331,7 +401,7 @@ export default function DropFinderPage() {
             {RAID_DIFFICULTIES.map((d) => (
               <button
                 key={d.value}
-                onClick={() => setDifficulty(d.value)}
+                onClick={() => { setDifficulty(d.value); setUpgradeLevel(0); }}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
                   difficulty === d.value
                     ? "bg-white text-black border-white"
@@ -353,7 +423,7 @@ export default function DropFinderPage() {
             {(category === "mplus" ? MPLUS_DIFFICULTIES : NORMAL_DUNGEON_DIFFICULTIES).map((d) => (
               <button
                 key={d.value}
-                onClick={() => setDungeonDiff(d.value)}
+                onClick={() => { setDungeonDiff(d.value); setUpgradeLevel(0); }}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
                   dungeonDiff === d.value
                     ? "bg-white text-black border-white"
@@ -361,6 +431,39 @@ export default function DropFinderPage() {
                 }`}
               >
                 {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade level selector */}
+      {currentTrackInfo && drops && (
+        <div className="card p-5">
+          <label className="label-text">Upgrade Level</label>
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              onClick={() => setUpgradeLevel(0)}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
+                upgradeLevel === 0
+                  ? "bg-white text-black border-white"
+                  : "bg-surface-2 text-gray-400 border-border hover:border-gray-500 hover:text-white"
+              }`}
+            >
+              Base
+            </button>
+            {currentTrackInfo.levels.map((lvl) => (
+              <button
+                key={lvl.level}
+                onClick={() => setUpgradeLevel(lvl.level)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
+                  upgradeLevel === lvl.level
+                    ? "bg-white text-black border-white"
+                    : "bg-surface-2 text-gray-400 border-border hover:border-gray-500 hover:text-white"
+                }`}
+              >
+                {currentTrackInfo.name} {lvl.level}/{lvl.max_level}
+                <span className="ml-1 text-[10px] opacity-60">{lvl.ilvl}</span>
               </button>
             ))}
           </div>
@@ -446,7 +549,7 @@ export default function DropFinderPage() {
                       }`}
                     >
                       <img
-                        src={`https://wow.zamimg.com/images/wow/icons/small/${item.icon}.jpg`}
+                        src={`https://render.worldofwarcraft.com/icons/56/${item.icon}.jpg`}
                         alt=""
                         className="w-6 h-6 rounded"
                       />
@@ -456,12 +559,12 @@ export default function DropFinderPage() {
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className={`text-[12px] font-medium ${QUALITY_COLORS[effectiveQuality(item, difficulty, dungeonDiff)] || "text-gray-400"}`}
+                        className={`text-[12px] font-medium ${QUALITY_COLORS[resolveUpgrade(item, difficulty, dungeonDiff, upgradeLevel, upgradeTracks).quality] || "text-gray-400"}`}
                       >
                         {item.name}
                       </a>
                       <span className="text-[11px] text-gray-600 tabular-nums">
-                        {effectiveIlvl(item, difficulty, dungeonDiff)}
+                        {resolveUpgrade(item, difficulty, dungeonDiff, upgradeLevel, upgradeTracks).ilvl}
                       </span>
                     </button>
                   );
@@ -498,6 +601,27 @@ export default function DropFinderPage() {
             ) : (
               `Find Upgrades (${selected.size} items)`
             )}
+          </button>
+
+          {/* Sticky side button */}
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || selected.size === 0 || !hasCharacter}
+            className="group fixed right-4 top-1/2 -translate-y-1/2 z-[90] btn-primary w-10 hover:w-auto py-2.5 px-2.5 hover:px-4 text-sm rounded-full hover:rounded-xl shadow-lg shadow-black/50 flex items-center gap-0 hover:gap-2 transition-all duration-200 overflow-hidden"
+          >
+            {submitting ? (
+              <svg className="w-4 h-4 shrink-0 animate-spin" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+                <path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M3 2l10 6-10 6V2z" />
+              </svg>
+            )}
+            <span className="whitespace-nowrap max-w-0 group-hover:max-w-[10rem] overflow-hidden transition-all duration-200 opacity-0 group-hover:opacity-100">
+              {submitting ? "Starting sim…" : `Find Upgrades (${selected.size})`}
+            </span>
           </button>
         </div>
       )}

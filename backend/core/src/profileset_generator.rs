@@ -56,7 +56,7 @@ pub fn generate_top_gear_input(
     selected_items: &HashMap<String, Vec<usize>>,
 ) -> Result<(String, usize, HashMap<String, Vec<Value>>), String> {
     // Extract base profile info (non-gear lines) and equipped gear
-    let (base_lines, equipped_gear, talents_string) = parse_base_profile(base_profile);
+    let (base_lines, equipped_gear, talents_string, _spec) = parse_base_profile(base_profile);
 
     // Build the option lists per slot for combination generation
     let mut slot_item_lists: HashMap<String, Vec<Value>> = HashMap::new();
@@ -316,14 +316,16 @@ pub fn generate_top_gear_input(
     Ok((lines.join("\n"), combo_count, combo_metadata))
 }
 
-fn parse_base_profile(base_profile: &str) -> (Vec<String>, HashMap<String, String>, String) {
+fn parse_base_profile(base_profile: &str) -> (Vec<String>, HashMap<String, String>, String, String) {
     let mut non_gear_lines: Vec<String> = Vec::new();
     let mut equipped_gear: HashMap<String, String> = HashMap::new();
     let mut talents_string = String::new();
+    let mut spec_string = String::new();
 
     let gear_pattern = format!(r"^({})=(.*)", GEAR_SLOTS.join("|"));
     let gear_re = Regex::new(&gear_pattern).unwrap();
     let talents_re = Regex::new(r"^talents=(.+)").unwrap();
+    let spec_re = Regex::new(r"^spec=(\w+)").unwrap();
 
     for line in base_profile.lines() {
         let stripped = line.trim();
@@ -335,6 +337,11 @@ fn parse_base_profile(base_profile: &str) -> (Vec<String>, HashMap<String, Strin
         if let Some(caps) = talents_re.captures(stripped) {
             talents_string = caps[1].to_string();
             continue;
+        }
+
+        // Extract spec
+        if let Some(caps) = spec_re.captures(stripped) {
+            spec_string = caps[1].to_lowercase();
         }
 
         // Extract gear lines
@@ -349,7 +356,7 @@ fn parse_base_profile(base_profile: &str) -> (Vec<String>, HashMap<String, Strin
         non_gear_lines.push(stripped.to_string());
     }
 
-    (non_gear_lines, equipped_gear, talents_string)
+    (non_gear_lines, equipped_gear, talents_string, spec_string)
 }
 
 fn item_meta(item: &Value, slot: &str) -> Value {
@@ -365,17 +372,40 @@ fn item_meta(item: &Value, slot: &str) -> Value {
     })
 }
 
-fn inv_type_to_slots(inv_type: u64) -> Vec<&'static str> {
+/// Specs that can dual wield (equip one-hand weapons in both hands).
+fn can_dual_wield(spec: &str) -> bool {
+    matches!(
+        spec,
+        "fury" | "frost" | "enhancement" | "windwalker" | "brewmaster"
+        | "havoc" | "vengeance"
+        | "outlaw" | "assassination" | "subtlety"
+    )
+}
+
+fn inv_type_to_slots(inv_type: u64, spec: &str) -> Vec<&'static str> {
     match inv_type {
         1 => vec!["head"], 2 => vec!["neck"], 3 => vec!["shoulder"],
         5 | 20 => vec!["chest"], 6 => vec!["waist"], 7 => vec!["legs"],
         8 => vec!["feet"], 9 => vec!["wrist"], 10 => vec!["hands"],
         11 => vec!["finger1", "finger2"],
         12 => vec!["trinket1", "trinket2"],
-        13 => vec!["main_hand", "off_hand"],
+        13 => {
+            if can_dual_wield(spec) {
+                vec!["main_hand", "off_hand"]
+            } else {
+                vec!["main_hand"]
+            }
+        }
         14 => vec!["off_hand"],
         16 => vec!["back"],
-        17 | 15 | 26 | 21 => vec!["main_hand"],
+        17 => {
+            if spec == "fury" {
+                vec!["main_hand", "off_hand"]
+            } else {
+                vec!["main_hand"]
+            }
+        }
+        15 | 26 | 21 => vec!["main_hand"],
         22 | 23 => vec!["off_hand"],
         _ => vec![],
     }
@@ -385,7 +415,7 @@ pub fn generate_droptimizer_input(
     base_profile: &str,
     drop_items: &[Value],
 ) -> (String, usize, HashMap<String, Value>) {
-    let (base_lines, equipped_gear, talents_string) = parse_base_profile(base_profile);
+    let (base_lines, equipped_gear, talents_string, spec) = parse_base_profile(base_profile);
 
     let mut lines: Vec<String> = Vec::new();
     let mut combo_metadata: HashMap<String, Value> = HashMap::new();
@@ -406,24 +436,58 @@ pub fn generate_droptimizer_input(
     }
     lines.push(String::new());
 
+    // Detect if currently using a two-hander (no off-hand or empty off-hand)
+    let has_two_hand_equipped = {
+        let oh = equipped_gear.get("off_hand").map(|s| s.trim());
+        oh.is_none() || oh == Some("") || oh == Some(",")
+    };
+
+    // Extract enchant/runeforge from equipped gear to copy onto drop items.
+    // Gems are NOT copied because drop items may not have sockets.
+    let enchant_re = Regex::new(r"(enchant_id=\d+)").unwrap();
+
     let mut combo_idx = 2usize;
     for item in drop_items {
         let item_id = item.get("item_id").and_then(|v| v.as_u64()).unwrap_or(0);
         let ilevel = item.get("ilevel").and_then(|v| v.as_u64()).unwrap_or(0);
         let name = item.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let encounter = item.get("encounter").and_then(|v| v.as_str()).unwrap_or("").to_string();
         let inv_type = item.get("inventory_type").and_then(|v| v.as_u64()).unwrap_or(0);
-        let slots = inv_type_to_slots(inv_type);
+        let bonus_ids: Vec<u64> = item.get("bonus_ids")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|b| b.as_u64()).collect())
+            .unwrap_or_default();
+        let mut slots = inv_type_to_slots(inv_type, &spec);
+
+        // If the character has a two-hander equipped, nothing can go in the
+        // off-hand — except two-handers for Fury warriors (Titan's Grip).
+        if has_two_hand_equipped && !(spec == "fury" && inv_type == 17) {
+            slots.retain(|s| *s != "off_hand");
+        }
+
         if slots.is_empty() {
             continue;
         }
 
-        let simc_str = format!(",id={},ilevel={}", item_id, ilevel);
+        let mut base_simc_str = format!(",id={},ilevel={}", item_id, ilevel);
+        if !bonus_ids.is_empty() {
+            let bonus_str = bonus_ids.iter().map(|b| b.to_string()).collect::<Vec<_>>().join("/");
+            base_simc_str.push_str(&format!(",bonus_id={}", bonus_str));
+        }
 
         for slot in &slots {
+            // Copy enchants/gems from the currently equipped item in this slot
+            let mut simc_str = base_simc_str.clone();
+            if let Some(equipped) = equipped_gear.get(*slot) {
+                if let Some(caps) = enchant_re.captures(equipped) {
+                    simc_str.push_str(&format!(",{}", &caps[1]));
+                }
+            }
+
             let combo_name = format!("Combo {}", combo_idx);
             lines.push(format!("### {}", combo_name));
             lines.push(format!("profileset.\"{}\"+={}={}", combo_name, slot, simc_str));
-            if inv_type == 17 && *slot == "main_hand" {
+            if inv_type == 17 && *slot == "main_hand" && spec != "fury" {
                 lines.push(format!("profileset.\"{}\"+=off_hand=,", combo_name));
             }
             if !talents_string.is_empty() {
@@ -436,10 +500,11 @@ pub fn generate_droptimizer_input(
                 "item_id": item_id,
                 "ilevel": ilevel,
                 "name": name,
-                "bonus_ids": [],
+                "bonus_ids": bonus_ids,
                 "enchant_id": 0,
                 "gem_id": 0,
                 "is_kept": false,
+                "encounter": encounter,
             }]));
             combo_idx += 1;
         }

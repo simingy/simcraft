@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "web": "docker compose up --build",
-    "desktop:dev": "cd desktop && npm run dev",
+    "desktop:dev": "npm run kill && cd desktop && npm run dev",
     "desktop:build": "cd desktop && npm run build",
-    "desktop:publish": "cd desktop && npm run publish",
-    "kill": "node scripts/kill-ports.js"
+"desktop:publish": "cd desktop && npm run publish",
+    "kill": "node scripts/kill-ports.js",
+    "build:simc": "cd desktop && npm run build:simc"
   }
 }

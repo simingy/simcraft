@@ -1,6 +1,8 @@
 pub mod memory;
 #[cfg(feature = "web")]
 pub mod sqlite;
+#[cfg(feature = "postgres")]
+pub mod postgres;
 
 use crate::models::{Job, JobStatus};
 

@@ -72,8 +72,6 @@ const SIM_OPTIONS: &[&str] = &[
     "report_details=1",
     "single_actor_batch=1",
     "optimize_expressions=1",
-    "desired_targets=1",
-    "max_time=300",
     "temporary_enchant=",
 ];
 
@@ -109,6 +107,8 @@ async fn run_simc_subprocess(
     target_error: f64,
     iterations: u32,
     threads: u32,
+    desired_targets: u32,
+    max_time: u32,
     calculate_scale_factors: bool,
     stat_weights: Option<Vec<String>>,
     stage_name: &str,
@@ -155,10 +155,14 @@ async fn run_simc_subprocess(
         // CREATE_NO_WINDOW | BELOW_NORMAL_PRIORITY_CLASS
         cmd.creation_flags(0x08000000 | 0x00004000);
     }
+    let is_dungeon_route = simc_input.lines().any(|l| {
+        let trimmed = l.trim();
+        trimmed == "fight_style=DungeonRoute" || trimmed == "fight_style=\"DungeonRoute\""
+    });
+
     cmd.arg(input_file.to_str().unwrap_or(""))
         .arg(format!("json2={}", output_file.display()))
         .arg(format!("iterations={}", iterations))
-        .arg(format!("fight_style={}", fight_style))
         .arg(format!("target_error={}", target_error))
         .arg(format!("threads={}", threads))
         .arg(format!(
@@ -174,8 +178,18 @@ async fn run_simc_subprocess(
         }
     }
 
-    for opt in OVERRIDES {
-        cmd.arg(*opt);
+    // For dungeon routes, fight_style/max_time/overrides are defined in the input
+    // file itself — don't override them with CLI args.
+    if is_dungeon_route {
+        cmd.arg(format!("desired_targets={}", desired_targets));
+    } else {
+        cmd.arg(format!("fight_style={}", fight_style))
+            .arg(format!("desired_targets={}", desired_targets))
+            .arg(format!("max_time={}", max_time));
+        for opt in OVERRIDES {
+            cmd.arg(*opt);
+        }
+    }
     }
     for opt in SIM_OPTIONS {
         cmd.arg(*opt);
@@ -187,7 +201,7 @@ async fn run_simc_subprocess(
     cmd.stdout(std::process::Stdio::piped());
     cmd.stderr(std::process::Stdio::piped());
 
-    println!("Running simc: {} (threads={}, affinity limited)", simc_path.display(), threads);
+    println!("Running simc: {} (threads={}, desired_targets={}, max_time={}, affinity limited)", simc_path.display(), threads, desired_targets, max_time);
 
     let mut child = cmd
         .spawn()
@@ -387,6 +401,16 @@ pub async fn run_simc(
         .and_then(|v| v.as_array())
         .map(|arr| arr.iter().filter_map(|s| s.as_str().map(String::from)).collect());
 
+    let desired_targets = options
+        .get("desired_targets")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(1) as u32;
+
+    let max_time = options
+        .get("max_time")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(300) as u32;
+
     run_simc_subprocess(
         simc_path,
         job_id,
@@ -395,6 +419,8 @@ pub async fn run_simc(
         target_error,
         iterations,
         threads,
+        desired_targets,
+        max_time,
         calculate_scale_factors,
         stat_weights,
         "",
@@ -424,6 +450,14 @@ pub async fn run_simc_staged(
         .and_then(|v| v.as_u64())
         .unwrap_or(1000) as u32;
     let threads = resolve_threads(options);
+    let desired_targets = options
+        .get("desired_targets")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(1) as u32;
+    let max_time = options
+        .get("max_time")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(300) as u32;
 
     if combo_count < STAGED_THRESHOLD {
         on_progress(5, "Simulating", &format!("{} combos", combo_count));
@@ -439,6 +473,8 @@ pub async fn run_simc_staged(
             target_error,
             user_iterations,
             threads,
+            desired_targets,
+            max_time,
             false,
             None,
             "direct",
@@ -496,6 +532,8 @@ pub async fn run_simc_staged(
             stage.target_error,
             stage_iterations[stage_idx],
             threads,
+            desired_targets,
+            max_time,
             false,
             None,
             &stage.name.to_lowercase(),

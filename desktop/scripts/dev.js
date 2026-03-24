@@ -2,6 +2,7 @@ const { spawn, execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
+const https = require("https");
 
 const ROOT = path.join(__dirname, "..", "..");
 const BACKEND_DIR = path.join(ROOT, "backend");
@@ -9,6 +10,19 @@ const FRONTEND_DIR = path.join(ROOT, "frontend");
 
 const ext = process.platform === "win32" ? ".exe" : "";
 const serverBinary = path.join(BACKEND_DIR, "target", "debug", `simhammer-server${ext}`);
+
+function findNewestMtime(dir, extension) {
+  let newest = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory() && entry.name !== "target" && entry.name !== "node_modules") {
+      newest = Math.max(newest, findNewestMtime(full, extension));
+    } else if (entry.isFile() && entry.name.endsWith(extension)) {
+      newest = Math.max(newest, fs.statSync(full).mtimeMs);
+    }
+  }
+  return newest;
+}
 
 function buildBackend() {
   console.log("[dev] Building Rust backend...");
@@ -40,39 +54,90 @@ function waitForUrl(url, timeout = 30000) {
   });
 }
 
-function ensureResources() {
+function download(url) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith("https") ? https : http;
+    mod.get(url, { headers: { "User-Agent": "SimHammer" } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return download(res.headers.location).then(resolve, reject);
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
+      }
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("error", reject);
+    }).on("error", reject);
+  });
+}
+
+async function fetchGameData(dataDir) {
+  const BASE_URL = "https://www.raidbots.com/static/data/live";
+
+  fs.mkdirSync(dataDir, { recursive: true });
+
+  console.log("[dev] Fetching metadata.json...");
+  const metaBuf = await download(`${BASE_URL}/metadata.json`);
+  fs.writeFileSync(path.join(dataDir, "metadata.json"), metaBuf);
+
+  const metadata = JSON.parse(metaBuf.toString());
+  const files = metadata.files || [];
+
+  console.log(`[dev] Downloading ${files.length} data files...`);
+  for (const file of files) {
+    process.stdout.write(`  ${file}... `);
+    const buf = await download(`${BASE_URL}/${file}`);
+    fs.writeFileSync(path.join(dataDir, file), buf);
+    console.log("ok");
+  }
+
+  // Copy season-config.json (manually maintained, not on Raidbots)
+  const seasonConfig = path.join(BACKEND_DIR, "core", "season-config.json");
+  if (fs.existsSync(seasonConfig)) {
+    fs.copyFileSync(seasonConfig, path.join(dataDir, "season-config.json"));
+    console.log("[dev] Copied season-config.json");
+  }
+}
+
+async function ensureResources() {
   const dataDir = path.join(BACKEND_DIR, "resources", "data");
   const simcDir = path.join(BACKEND_DIR, "resources", "simc");
   const simcBinary = path.join(simcDir, process.platform === "win32" ? "simc.exe" : "simc");
   const metadataFile = path.join(dataDir, "metadata.json");
 
-  if (fs.existsSync(simcBinary) && fs.existsSync(metadataFile)) {
-    console.log("[dev] Resources up to date.");
-    return;
+  // Build simc binary if missing
+  if (!fs.existsSync(simcBinary)) {
+    console.log("[dev] SimC binary missing — building from source...");
+    execSync("node scripts/build-simc.js", {
+      cwd: path.join(__dirname, ".."),
+      stdio: "inherit",
+    });
   }
 
-  console.log("[dev] Resources missing — fetching via Docker...");
-  fs.mkdirSync(dataDir, { recursive: true });
-  fs.mkdirSync(simcDir, { recursive: true });
-  execSync("docker compose --profile desktop up resources --build", {
-    cwd: ROOT,
-    stdio: "inherit",
-  });
+  // Fetch game data if missing
+  if (!fs.existsSync(metadataFile)) {
+    console.log("[dev] Game data missing — downloading from Raidbots...");
+    await fetchGameData(dataDir);
+  }
+
+  console.log("[dev] Resources up to date.");
 }
 
 async function main() {
   // 0. Ensure game data and simc binary exist
-  ensureResources();
+  await ensureResources();
 
-  // 1. Build backend if binary doesn't exist
+  // 1. Build backend if binary doesn't exist or any source changed
   if (!fs.existsSync(serverBinary)) {
     buildBackend();
   } else {
-    // Rebuild if source is newer than binary
+    // Rebuild if any .rs source file is newer than the binary
     try {
-      const binaryStat = fs.statSync(serverBinary);
-      const mainStat = fs.statSync(path.join(BACKEND_DIR, "server", "src", "main.rs"));
-      if (mainStat.mtimeMs > binaryStat.mtimeMs) {
+      const binaryMtime = fs.statSync(serverBinary).mtimeMs;
+      const sourceChanged = findNewestMtime(BACKEND_DIR, ".rs") > binaryMtime
+        || findNewestMtime(BACKEND_DIR, ".toml") > binaryMtime;
+      if (sourceChanged) {
         buildBackend();
       } else {
         console.log("[dev] Backend binary up to date.");

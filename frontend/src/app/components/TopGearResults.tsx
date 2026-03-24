@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useItemInfo, useEnchantInfo, useGemInfo, getIconUrl, getWowheadUrl, getWowheadData, QUALITY_COLORS } from "../lib/useItemInfo";
 import type { ItemInfo, EnchantInfo, GemInfo, ItemQuery } from "../lib/useItemInfo";
 import { SLOT_LABELS } from "../lib/parseAddonString";
@@ -15,6 +15,7 @@ interface ResultItem {
   enchant_id?: number;
   gem_id?: number;
   is_kept?: boolean;
+  encounter?: string;
 }
 
 interface TopGearResult {
@@ -47,6 +48,27 @@ export default function TopGearResults({
 }: TopGearResultsProps) {
   const maxDps = results.length > 0 ? results[0].dps : baseDps;
   const bestResult = results.length > 0 ? results[0] : null;
+
+  // Droptimizer grouping — only available when items have encounter data
+  const hasEncounterData = results.some((r) => r.items.some((it) => it.encounter));
+  type GroupMode = "rank" | "encounter";
+  const [groupMode, setGroupMode] = useState<GroupMode>("rank");
+
+  const groupedResults = useMemo(() => {
+    if (groupMode === "rank" || !hasEncounterData) return null;
+    const groups: Record<string, TopGearResult[]> = {};
+    for (const result of results) {
+      const encounter = result.items[0]?.encounter || "Unknown";
+      if (!groups[encounter]) groups[encounter] = [];
+      groups[encounter].push(result);
+    }
+    // Sort groups by their best item's delta (descending)
+    return Object.entries(groups).sort(([, a], [, b]) => {
+      const bestA = a[0]?.delta ?? 0;
+      const bestB = b[0]?.delta ?? 0;
+      return bestB - bestA;
+    });
+  }, [results, groupMode, hasEncounterData]);
 
   // Build the full gear set for best result: start with equipped, overlay upgrades
   const bestGearSet = useMemo(() => {
@@ -219,97 +241,175 @@ export default function TopGearResults({
           <p className="text-xs font-medium text-muted uppercase tracking-widest">
             Rankings
           </p>
-          <span className="text-[11px] text-muted font-mono">
-            {results.length} results
-          </span>
+          <div className="flex items-center gap-3">
+            {hasEncounterData && (
+              <div className="flex gap-1">
+                {([["rank", "By Rank"], ["encounter", "By Boss"]] as const).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setGroupMode(mode)}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all border ${
+                      groupMode === mode
+                        ? "bg-white text-black border-white"
+                        : "bg-surface-2 text-gray-400 border-border hover:border-gray-500 hover:text-white"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <span className="text-[11px] text-muted font-mono">
+              {results.length} results
+            </span>
+          </div>
         </div>
 
-        <div className="space-y-1">
-          {results.map((result, idx) => {
-            const barWidth = maxDps > 0 ? (result.dps / maxDps) * 100 : 0;
-            const isEquipped = result.items.length === 0 || result.name === "Currently Equipped";
-            const isBest = idx === 0 && result.delta > 0;
-
-            return (
-              <div
-                key={idx}
-                className={`relative rounded-lg overflow-hidden ${
-                  isBest
-                    ? "ring-1 ring-gold/20"
-                    : isEquipped
-                    ? "ring-1 ring-white/5"
-                    : ""
-                }`}
-              >
-                <div
-                  className="absolute inset-y-0 left-0 bg-white/[0.02]"
-                  style={{ width: `${barWidth}%` }}
-                />
-                <div className="relative flex items-center justify-between px-3 py-2 gap-3">
-                  <div className="flex items-center gap-2 min-w-0 flex-1 pl-1">
-                    <span className="text-xs font-mono text-gray-500 w-5 text-right shrink-0 tabular-nums">
-                      {idx + 1}
-                    </span>
-
-                    {isEquipped ? (
-                      <span className="text-[13px] text-muted">
-                        Currently Equipped
-                      </span>
-                    ) : (
-                      <div className="flex items-center gap-1 min-w-0 flex-wrap">
-                        {result.items.filter(it => !it.is_kept).map((it, i) => (
-                          <ItemTag
-                            key={i}
-                            item={it}
-                            info={
-                              it.item_id > 0
-                                ? itemInfoMap[it.item_id]
-                                : undefined
-                            }
-                            enchant={it.enchant_id ? enchantInfoMap[it.enchant_id] : undefined}
-                            gem={it.gem_id ? gemInfoMap[it.gem_id] : undefined}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {isBest && (
-                      <span className="shrink-0 text-[10px] uppercase tracking-wider font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded">
-                        Best
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span
-                      className={`text-[13px] font-mono tabular-nums flex items-center gap-1.5 ${
-                        result.delta > 0
-                          ? "text-emerald-400"
-                          : result.delta < 0
-                          ? "text-red-400"
-                          : "text-muted"
-                      }`}
-                    >
-                      <span>
-                        {result.delta > 0
-                          ? `+${Math.round(result.delta).toLocaleString()}`
-                          : result.delta < 0
-                          ? Math.round(result.delta).toLocaleString()
-                          : "—"}
-                      </span>
-                      {result.delta !== 0 && baseDps > 0 && (
-                        <span className="text-xs opacity-70">
-                          ({result.delta > 0 ? "+" : ""}{((result.delta / baseDps) * 100).toFixed(1)}%)
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-sm font-mono text-gray-300 tabular-nums w-16 text-right">
-                      {Math.round(result.dps).toLocaleString()}
-                    </span>
-                  </div>
+        {groupMode === "encounter" && groupedResults ? (
+          <div className="space-y-6">
+            {groupedResults.map(([encounter, group]) => (
+              <div key={encounter}>
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-border/50">
+                  <span className="text-[12px] font-semibold text-gray-300">{encounter}</span>
+                  <span className="text-[10px] text-muted font-mono">{group.length} items</span>
+                </div>
+                <div className="space-y-1">
+                  {group.map((result) => (
+                    <ResultRow
+                      key={result.name}
+                      result={result}
+                      maxDps={maxDps}
+                      baseDps={baseDps}
+                      isBest={result === results[0] && result.delta > 0}
+                      itemInfoMap={itemInfoMap}
+                      enchantInfoMap={enchantInfoMap}
+                      gemInfoMap={gemInfoMap}
+                    />
+                  ))}
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        ) : (
+        <div className="space-y-1">
+          {results.map((result, idx) => (
+            <ResultRow
+              key={idx}
+              result={result}
+              rank={idx + 1}
+              maxDps={maxDps}
+              baseDps={baseDps}
+              isBest={idx === 0 && result.delta > 0}
+              itemInfoMap={itemInfoMap}
+              enchantInfoMap={enchantInfoMap}
+              gemInfoMap={gemInfoMap}
+            />
+          ))}
+        </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ResultRow({
+  result,
+  rank,
+  maxDps,
+  baseDps,
+  isBest,
+  itemInfoMap,
+  enchantInfoMap,
+  gemInfoMap,
+}: {
+  result: TopGearResult;
+  rank?: number;
+  maxDps: number;
+  baseDps: number;
+  isBest: boolean;
+  itemInfoMap: Record<number, ItemInfo>;
+  enchantInfoMap: Record<number, EnchantInfo>;
+  gemInfoMap: Record<number, GemInfo>;
+}) {
+  const barWidth = maxDps > 0 ? (result.dps / maxDps) * 100 : 0;
+  const isEquipped = result.items.length === 0 || result.name === "Currently Equipped";
+
+  return (
+    <div
+      className={`relative rounded-lg overflow-hidden ${
+        isBest
+          ? "ring-1 ring-gold/20"
+          : isEquipped
+          ? "ring-1 ring-white/5"
+          : ""
+      }`}
+    >
+      <div
+        className="absolute inset-y-0 left-0 bg-white/[0.02]"
+        style={{ width: `${barWidth}%` }}
+      />
+      <div className="relative flex items-center justify-between px-3 py-2 gap-3">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {rank != null && (
+            <span className="text-[10px] font-mono text-gray-600 w-5 text-right shrink-0 tabular-nums">
+              {rank}
+            </span>
+          )}
+
+          {isEquipped ? (
+            <span className="text-[12px] text-muted">
+              Currently Equipped
+            </span>
+          ) : (
+            <div className="flex items-center gap-1 min-w-0 flex-wrap">
+              {result.items.filter(it => !it.is_kept).map((it, i) => (
+                <ItemTag
+                  key={i}
+                  item={it}
+                  info={
+                    it.item_id > 0
+                      ? itemInfoMap[it.item_id]
+                      : undefined
+                  }
+                  enchant={it.enchant_id ? enchantInfoMap[it.enchant_id] : undefined}
+                  gem={it.gem_id ? gemInfoMap[it.gem_id] : undefined}
+                />
+              ))}
+            </div>
+          )}
+
+          {isBest && (
+            <span className="shrink-0 text-[9px] uppercase tracking-wider font-bold text-gold bg-gold/10 px-1.5 py-0.5 rounded">
+              Best
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span
+            className={`text-[13px] font-mono tabular-nums flex items-center gap-1.5 ${
+              result.delta > 0
+                ? "text-emerald-400"
+                : result.delta < 0
+                ? "text-red-400"
+                : "text-muted"
+            }`}
+          >
+            <span>
+              {result.delta > 0
+                ? `+${Math.round(result.delta).toLocaleString()}`
+                : result.delta < 0
+                ? Math.round(result.delta).toLocaleString()
+                : "—"}
+            </span>
+            {result.delta !== 0 && baseDps > 0 && (
+              <span className="text-xs opacity-70">
+                ({result.delta > 0 ? "+" : ""}{((result.delta / baseDps) * 100).toFixed(1)}%)
+              </span>
+            )}
+          </span>
+          <span className="text-sm font-mono text-gray-300 tabular-nums w-16 text-right">
+            {Math.round(result.dps).toLocaleString()}
+          </span>
         </div>
       </div>
     </div>

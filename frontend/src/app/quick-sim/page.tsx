@@ -5,7 +5,7 @@ import { useSimContext } from "../components/SimContext";
 import { API_URL } from "../lib/api";
 
 export default function QuickSimPage() {
-  const { simcInput, fightStyle, threads, selectedTalent } = useSimContext();
+  const { simcInput, fightStyle, threads, selectedTalent, targetCount, fightLength, customSimc } = useSimContext();
   const [simType, setSimType] = useState<"quick" | "stat_weights">("quick");
   const [selectedStats, setSelectedStats] = useState<string[]>(["crit", "haste", "mastery", "vers"]);
   const [submitting, setSubmitting] = useState(false);
@@ -48,8 +48,11 @@ export default function QuickSimPage() {
           target_error: 0.1,
           sim_type: simType,
           stat_weights: simType === "stat_weights" ? selectedStats : undefined,
+          desired_targets: targetCount,
+          max_time: fightLength,
           threads,
           ...(selectedTalent ? { talents: selectedTalent } : {}),
+          ...(customSimc ? { custom_simc: customSimc } : {}),
         }),
       });
       if (!res.ok) {
@@ -105,7 +108,6 @@ export default function QuickSimPage() {
           </div>
         </div>
       )}
-
       {error && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
           {error}

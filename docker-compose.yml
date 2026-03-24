@@ -36,5 +36,6 @@ services:
       - ./backend/resources/simc:/mount/simc
     entrypoint: ["sh", "-c", "cp -r /out/data/* /mount/data/ && cp -r /out/simc/* /mount/simc/ && echo 'Resources ready.'"]
 
+
 volumes:
   simhammer-db:

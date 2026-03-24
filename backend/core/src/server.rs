@@ -48,9 +48,9 @@ impl SystemStats {
 
 // ---------- Request / Response types ----------
 
+/// Shared simulation options common to all sim request types.
 #[derive(Debug, Deserialize)]
-pub struct SimRequest {
-    pub simc_input: String,
+pub struct SimOptions {
     #[serde(default = "default_iterations")]
     pub iterations: u32,
     #[serde(default = "default_fight_style")]
@@ -63,10 +63,47 @@ pub struct SimRequest {
     pub stat_weights: Option<Vec<String>>,
     #[serde(default)]
     pub max_upgrade: bool,
+    #[serde(default = "default_desired_targets")]
+    pub desired_targets: u32,
+    #[serde(default = "default_max_time")]
+    pub max_time: u32,
     #[serde(default)]
     pub threads: u32,
     #[serde(default)]
     pub talents: String,
+    #[serde(default)]
+    pub custom_simc: String,
+}
+
+impl SimOptions {
+    fn to_json(&self) -> Value {
+        json!({
+            "fight_style": self.fight_style,
+            "target_error": self.target_error,
+            "iterations": self.iterations,
+            "desired_targets": self.desired_targets,
+            "max_time": self.max_time,
+            "threads": self.threads,
+            "stat_weights": self.stat_weights,
+        })
+    }
+
+    fn to_json_with_sim_type(&self, sim_type: &str) -> Value {
+        let mut v = self.to_json();
+        v["sim_type"] = json!(sim_type);
+        v
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SimRequest {
+    pub simc_input: String,
+    #[serde(default = "default_sim_type")]
+    pub sim_type: String,
+    #[serde(default)]
+    pub max_upgrade: bool,
+    #[serde(flatten)]
+    pub options: SimOptions,
 }
 
 #[derive(Debug, Deserialize)]
@@ -74,36 +111,20 @@ pub struct TopGearRequest {
     pub simc_input: String,
     pub selected_items: HashMap<String, Vec<usize>>,
     pub items_by_slot: Option<HashMap<String, Vec<Value>>>,
-    #[serde(default = "default_iterations")]
-    pub iterations: u32,
-    #[serde(default = "default_fight_style")]
-    pub fight_style: String,
-    #[serde(default = "default_target_error")]
-    pub target_error: f64,
     #[serde(default)]
     pub max_upgrade: bool,
     #[serde(default)]
     pub copy_enchants: bool,
-    #[serde(default)]
-    pub threads: u32,
-    #[serde(default)]
-    pub talents: String,
+    #[serde(flatten)]
+    pub options: SimOptions,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct DroptimizerRequest {
     pub simc_input: String,
     pub drop_items: Vec<Value>,
-    #[serde(default = "default_iterations")]
-    pub iterations: u32,
-    #[serde(default = "default_fight_style")]
-    pub fight_style: String,
-    #[serde(default = "default_target_error")]
-    pub target_error: f64,
-    #[serde(default)]
-    pub threads: u32,
-    #[serde(default)]
-    pub talents: String,
+    #[serde(flatten)]
+    pub options: SimOptions,
 }
 
 #[derive(Debug, Serialize)]
@@ -131,6 +152,27 @@ fn default_iterations() -> u32 { 1000 }
 fn default_fight_style() -> String { "Patchwerk".to_string() }
 fn default_target_error() -> f64 { 0.1 }
 fn default_sim_type() -> String { "quick".to_string() }
+fn default_desired_targets() -> u32 { 1 }
+fn default_max_time() -> u32 { 300 }
+
+/// Sanitize user-provided custom SimC input by stripping dangerous directives.
+fn sanitize_custom_simc(input: &str) -> String {
+    let blocked = regex::Regex::new(r"(?mi)^\s*(output|html|json2?|xml)\s*=").unwrap();
+    input
+        .lines()
+        .filter(|line| !blocked.is_match(line))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Append custom SimC input to the end of a simc profile string.
+fn append_custom_simc(simc_input: &str, custom_simc: &str) -> String {
+    let sanitized = sanitize_custom_simc(custom_simc);
+    if sanitized.trim().is_empty() {
+        return simc_input.to_string();
+    }
+    format!("{}\n\n# Custom SimC options\n{}", simc_input, sanitized)
+}
 
 /// Replace the talents= line in a simc input string with a new talent string.
 fn apply_talent_override(simc_input: &str, talents: &str) -> String {
@@ -145,6 +187,61 @@ fn apply_talent_override(simc_input: &str, talents: &str) -> String {
     }
 }
 
+/// Spawn a staged (top-gear / droptimizer) simulation in a background task.
+fn spawn_staged_sim(
+    store: Arc<dyn JobStorage>,
+    simc: PathBuf,
+    options: Value,
+    job_id: String,
+    simc_input: String,
+    combo_count: usize,
+) {
+    tokio::spawn(async move {
+        store.update_status(&job_id, JobStatus::Running);
+        let store_progress = store.clone();
+        let store_stages = store.clone();
+        let store_log = store.clone();
+        let jid_progress = job_id.clone();
+        let jid_stages = job_id.clone();
+        let jid_log = job_id.clone();
+        match simc_runner::run_simc_staged(
+            &simc,
+            &job_id,
+            &simc_input,
+            &options,
+            combo_count,
+            move |pct, stage, detail| {
+                store_progress.update_progress(&jid_progress, pct, stage, detail);
+            },
+            move |summary| {
+                store_stages.complete_stage(&jid_stages, summary);
+            },
+            move |line| {
+                store_log.append_log(&jid_log, line);
+            },
+        )
+        .await
+        {
+            Ok(raw) => {
+                let job_snap = store.get(&job_id);
+                let meta: Option<HashMap<String, Vec<Value>>> = job_snap
+                    .as_ref()
+                    .and_then(|j| j.combo_metadata_json.as_ref())
+                    .and_then(|s| serde_json::from_str::<Value>(s).ok())
+                    .and_then(|v| v.get("_combo_metadata").cloned())
+                    .and_then(|v| serde_json::from_value(v).ok());
+
+                let parsed = result_parser::parse_top_gear_result(&raw, meta.as_ref());
+                let result_str = serde_json::to_string(&parsed).unwrap_or_default();
+                store.set_result(&job_id, result_str);
+            }
+            Err(e) => {
+                store.set_error(&job_id, e);
+            }
+        }
+    });
+}
+
 // ---------- Handlers ----------
 
 async fn create_sim(
@@ -157,14 +254,15 @@ async fn create_sim(
     } else {
         req.simc_input.clone()
     };
-    simc_input = apply_talent_override(&simc_input, &req.talents);
+    simc_input = apply_talent_override(&simc_input, &req.options.talents);
+    simc_input = append_custom_simc(&simc_input, &req.options.custom_simc);
 
     let job = Job::new(
         simc_input.clone(),
         req.sim_type.clone(),
-        req.iterations,
-        req.fight_style.clone(),
-        req.target_error,
+        req.options.iterations,
+        req.options.fight_style.clone(),
+        req.options.target_error,
     );
     let job_id = job.id.clone();
     let created_at = job.created_at.clone();
@@ -173,14 +271,7 @@ async fn create_sim(
     // Spawn background task
     let store_clone = store.get_ref().clone();
     let simc = simc_path.get_ref().clone();
-    let options = json!({
-        "fight_style": req.fight_style,
-        "target_error": req.target_error,
-        "iterations": req.iterations,
-        "sim_type": req.sim_type,
-        "threads": req.threads,
-        "stat_weights": req.stat_weights,
-    });
+    let options = req.options.to_json_with_sim_type(&req.sim_type);
     let job_id_clone = job_id.clone();
 
     tokio::spawn(async move {
@@ -219,7 +310,7 @@ async fn create_top_gear_sim(
     } else {
         req.simc_input.clone()
     };
-    simc_input = apply_talent_override(&simc_input, &req.talents);
+    simc_input = apply_talent_override(&simc_input, &req.options.talents);
 
     let parsed = addon_parser::parse_addon_string(&simc_input);
     let base_profile = parsed
@@ -262,12 +353,14 @@ async fn create_top_gear_sim(
         }));
     }
 
+    let generated_input = append_custom_simc(&generated_input, &req.options.custom_simc);
+
     let job = Job::new(
         generated_input.clone(),
         "top_gear".to_string(),
-        req.iterations,
-        req.fight_style.clone(),
-        req.target_error,
+        req.options.iterations,
+        req.options.fight_style.clone(),
+        req.options.target_error,
     );
     let job_id = job.id.clone();
     let created_at = job.created_at.clone();
@@ -283,64 +376,14 @@ async fn create_top_gear_sim(
     job.combo_metadata_json = Some(meta_json);
     store.insert(job);
 
-    // Spawn background task
-    let store_clone = store.get_ref().clone();
-    let simc = simc_path.get_ref().clone();
-    let options = json!({
-        "fight_style": req.fight_style,
-        "target_error": req.target_error,
-        "iterations": req.iterations,
-        "threads": req.threads,
-    });
-    let job_id_clone = job_id.clone();
-
-    tokio::spawn(async move {
-        store_clone.update_status(&job_id_clone, JobStatus::Running);
-        let store_progress = store_clone.clone();
-        let store_stages = store_clone.clone();
-        let store_log = store_clone.clone();
-        let jid_progress = job_id_clone.clone();
-        let jid_stages = job_id_clone.clone();
-        let jid_log = job_id_clone.clone();
-        match simc_runner::run_simc_staged(
-            &simc,
-            &job_id_clone,
-            &generated_input,
-            &options,
-            combo_count,
-            move |pct, stage, detail| {
-                store_progress.update_progress(&jid_progress, pct, stage, detail);
-            },
-            move |summary| {
-                store_stages.complete_stage(&jid_stages, summary);
-            },
-            move |line| {
-                store_log.append_log(&jid_log, line);
-            },
-        )
-        .await
-        {
-            Ok(raw) => {
-                // Recover combo_metadata from job
-                let job_snap = store_clone.get(&job_id_clone);
-                let meta: Option<HashMap<String, Vec<Value>>> = job_snap
-                    .as_ref()
-                    .and_then(|j| j.combo_metadata_json.as_ref())
-                    .and_then(|s| serde_json::from_str::<Value>(s).ok())
-                    .and_then(|v| {
-                        v.get("_combo_metadata").cloned()
-                    })
-                    .and_then(|v| serde_json::from_value(v).ok());
-
-                let parsed = result_parser::parse_top_gear_result(&raw, meta.as_ref());
-                let result_str = serde_json::to_string(&parsed).unwrap_or_default();
-                store_clone.set_result(&job_id_clone, result_str);
-            }
-            Err(e) => {
-                store_clone.set_error(&job_id_clone, e);
-            }
-        }
-    });
+    spawn_staged_sim(
+        store.get_ref().clone(),
+        simc_path.get_ref().clone(),
+        req.options.to_json(),
+        job_id.clone(),
+        generated_input,
+        combo_count,
+    );
 
     HttpResponse::Ok().json(SimResponse {
         id: job_id,
@@ -354,7 +397,7 @@ async fn create_droptimizer_sim(
     store: web::Data<Arc<dyn JobStorage>>,
     simc_path: web::Data<PathBuf>,
 ) -> HttpResponse {
-    let simc_input = apply_talent_override(&req.simc_input, &req.talents);
+    let simc_input = apply_talent_override(&req.simc_input, &req.options.talents);
     let parsed = addon_parser::parse_addon_string(&simc_input);
     let base_profile = parsed
         .get("base_profile")
@@ -371,12 +414,14 @@ async fn create_droptimizer_sim(
         }));
     }
 
+    let generated_input = append_custom_simc(&generated_input, &req.options.custom_simc);
+
     let job = Job::new(
         generated_input.clone(),
-        "top_gear".to_string(),
-        req.iterations,
-        req.fight_style.clone(),
-        req.target_error,
+        "droptimizer".to_string(),
+        req.options.iterations,
+        req.options.fight_style.clone(),
+        req.options.target_error,
     );
     let job_id = job.id.clone();
     let created_at = job.created_at.clone();
@@ -391,60 +436,14 @@ async fn create_droptimizer_sim(
     job.combo_metadata_json = Some(meta_json);
     store.insert(job);
 
-    let store_clone = store.get_ref().clone();
-    let simc = simc_path.get_ref().clone();
-    let options = json!({
-        "fight_style": req.fight_style,
-        "target_error": req.target_error,
-        "iterations": req.iterations,
-        "threads": req.threads,
-    });
-    let job_id_clone = job_id.clone();
-
-    tokio::spawn(async move {
-        store_clone.update_status(&job_id_clone, JobStatus::Running);
-        let store_progress = store_clone.clone();
-        let store_stages = store_clone.clone();
-        let store_log = store_clone.clone();
-        let jid_progress = job_id_clone.clone();
-        let jid_stages = job_id_clone.clone();
-        let jid_log = job_id_clone.clone();
-        match simc_runner::run_simc_staged(
-            &simc,
-            &job_id_clone,
-            &generated_input,
-            &options,
-            combo_count,
-            move |pct, stage, detail| {
-                store_progress.update_progress(&jid_progress, pct, stage, detail);
-            },
-            move |summary| {
-                store_stages.complete_stage(&jid_stages, summary);
-            },
-            move |line| {
-                store_log.append_log(&jid_log, line);
-            },
-        )
-        .await
-        {
-            Ok(raw) => {
-                let job_snap = store_clone.get(&job_id_clone);
-                let meta: Option<HashMap<String, Vec<Value>>> = job_snap
-                    .as_ref()
-                    .and_then(|j| j.combo_metadata_json.as_ref())
-                    .and_then(|s| serde_json::from_str::<Value>(s).ok())
-                    .and_then(|v| v.get("_combo_metadata").cloned())
-                    .and_then(|v| serde_json::from_value(v).ok());
-
-                let parsed = result_parser::parse_top_gear_result(&raw, meta.as_ref());
-                let result_str = serde_json::to_string(&parsed).unwrap_or_default();
-                store_clone.set_result(&job_id_clone, result_str);
-            }
-            Err(e) => {
-                store_clone.set_error(&job_id_clone, e);
-            }
-        }
-    });
+    spawn_staged_sim(
+        store.get_ref().clone(),
+        simc_path.get_ref().clone(),
+        req.options.to_json(),
+        job_id.clone(),
+        generated_input,
+        combo_count,
+    );
 
     HttpResponse::Ok().json(SimResponse {
         id: job_id,
@@ -710,6 +709,10 @@ async fn get_max_upgrade_ilevels(body: web::Json<Vec<Value>>) -> HttpResponse {
     HttpResponse::Ok().json(results)
 }
 
+async fn list_upgrade_tracks() -> HttpResponse {
+    HttpResponse::Ok().json(game_data::get_upgrade_tracks())
+}
+
 async fn get_upgrade_options(query: web::Query<BonusIdsQuery>) -> HttpResponse {
     let ids: Vec<u64> = query
         .bonus_ids
@@ -865,6 +868,7 @@ pub async fn start_with_storage_bind(
             .route("/api/gem-info/{id}", web::get().to(get_gem_info))
             .route("/api/max-upgrade-ilevels", web::post().to(get_max_upgrade_ilevels))
             .route("/api/upgrade-options", web::get().to(get_upgrade_options))
+            .route("/api/upgrade-tracks", web::get().to(list_upgrade_tracks))
             .route("/api/droptimizer/sim", web::post().to(create_droptimizer_sim))
             .route("/api/instances", web::get().to(list_instances))
             .route("/api/instances/type/{type}/drops", web::get().to(get_drops_by_type))

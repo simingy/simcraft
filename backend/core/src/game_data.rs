@@ -550,6 +550,28 @@ pub fn get_instances() -> &'static Vec<Value> {
     INSTANCES.get().expect("Game data not loaded")
 }
 
+/// Returns all upgrade tracks grouped by track name.
+/// Format: { "Hero": [ { level, max_level, ilvl, bonus_id, quality }, ... ], ... }
+pub fn get_upgrade_tracks() -> Value {
+    let mut result: HashMap<String, Vec<Value>> = HashMap::new();
+    if let Some(tracks) = UPGRADE_TRACKS.get() {
+        for ((name, level, max_level), (ilvl, bonus_id, quality)) in tracks {
+            result.entry(name.clone()).or_default().push(serde_json::json!({
+                "level": level,
+                "max_level": max_level,
+                "ilvl": ilvl,
+                "bonus_id": bonus_id,
+                "quality": quality,
+            }));
+        }
+        // Sort each track's levels
+        for levels in result.values_mut() {
+            levels.sort_by_key(|v| v.get("level").and_then(|l| l.as_u64()).unwrap_or(0));
+        }
+    }
+    serde_json::json!(result)
+}
+
 fn inventory_type_slot(inv_type: u64) -> &'static str {
     match inv_type {
         1 => "Head", 2 => "Neck", 3 => "Shoulder", 4 => "Shirt",
@@ -738,7 +760,25 @@ pub fn get_instance_drops(
                     }
                 }
 
-                // Filter by spec restrictions
+                // Filter shields — only warriors, paladins, shamans can equip them
+                if inv_type == 14 {
+                    if let Some(cn) = class_name {
+                        if !matches!(cn, "warrior" | "paladin" | "shaman") {
+                            continue;
+                        }
+                    }
+                }
+
+                // Filter off-hand items — casters only (priests, mages, warlocks, druids, evokers)
+                if inv_type == 23 {
+                    if let Some(cn) = class_name {
+                        if !matches!(cn, "priest" | "mage" | "warlock" | "druid" | "shaman" | "evoker") {
+                            continue;
+                        }
+                    }
+                }
+
+                // Filter spec restrictions
                 if let Some(specs) = item.get("specs").and_then(|s| s.as_array()) {
                     if !allowed_specs.is_empty() {
                         let item_specs: Vec<u64> = specs.iter().filter_map(|v| v.as_u64()).collect();
@@ -758,9 +798,10 @@ pub fn get_instance_drops(
                 if let (Some(lvl), Some(tracks)) = (upgrade_lvl, track_map) {
                     for diff in &["lfr", "normal", "heroic", "mythic"] {
                         if let Some(track) = difficulty_track_name(diff) {
-                            if let Some(&(ilvl, bonus_id, quality)) = tracks.get(&(track, lvl, tm)) {
+                            if let Some(&(ilvl, bonus_id, quality)) = tracks.get(&(track.clone(), lvl, tm)) {
                                 diff_info.insert(diff.to_string(), serde_json::json!({
                                     "ilvl": ilvl, "bonus_id": bonus_id, "quality": quality,
+                                    "track": track, "level": lvl, "max_level": tm,
                                 }));
                             }
                         }
@@ -781,6 +822,7 @@ pub fn get_instance_drops(
                                 if let Some(&(ilvl, bonus_id, quality)) = tracks.get(&(track.to_string(), level, tm)) {
                                     dungeon_info.insert(diff_key.clone(), serde_json::json!({
                                         "ilvl": ilvl, "bonus_id": bonus_id, "quality": quality,
+                                        "track": track, "level": level, "max_level": tm,
                                     }));
                                 }
                             }
