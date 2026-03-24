@@ -20,13 +20,14 @@ SimulationCraft made simple. Run sims from your browser or download the desktop 
 ## Project Structure
 
 ```
-frontend/          Next.js 14 app (shared by web + desktop)
-backend/           Cargo workspace (Rust)
-  core/            simhammer-core library (API routes, simc runner, game data)
-  server/          simhammer-server binary (--desktop flag for desktop mode)
-  resources/       Runtime resources (data/, simc/, frontend/) — gitignored
-desktop/           Electron app (main process, preload, build scripts)
-docker-compose.yml Web deployment + desktop resource provisioning
+frontend/              Next.js 14 app (shared by web + desktop)
+backend/               Cargo workspace (Rust)
+  core/                simhammer-core library (API routes, simc runner, game data)
+  server/              simhammer-server binary (--desktop flag for desktop mode)
+  resources/           Runtime resources (data/, simc/, frontend/) — gitignored
+desktop/               Electron app (main process, preload, build scripts)
+docker-compose.yml     Web deployment (two-container: frontend + backend)
+Dockerfile.standalone  Single-image build (frontend + backend in one container)
 ```
 
 ## Web
@@ -49,6 +50,80 @@ Docker handles everything automatically — compiles the Rust backend, builds Si
 1. Clone the repo on your server
 2. Run `docker compose up -d --build`
 3. Set up nginx as reverse proxy (port 80 → 3000 for frontend, /api/ → 8000 for backend)
+
+## Standalone Docker Image
+
+A single self-contained Docker image that serves both the frontend and backend from one container on one port — no Docker Compose, no nginx, no separate frontend container needed.
+
+### Build
+
+```bash
+make build-standalone
+```
+
+### Run
+
+```bash
+make run-standalone
+```
+
+Or manually with explicit volume paths:
+
+```bash
+docker run -it -p 8000:8000 \
+  -v simhammer-data:/app/resources/data \
+  -v simhammer-data-full:/app/resources/data_full \
+  -v simhammer-simc:/app/resources/simc_repo \
+  -v simhammer-db:/app/db \
+  simhammer-standalone
+```
+
+Visit **http://localhost:8000** — the Rust server handles everything.
+
+### How it works
+
+The standard web deployment uses two containers (frontend + backend) and requires a reverse proxy to stitch them together. The standalone image eliminates all of that:
+
+**At build time** — Docker produces a single image containing:
+- The Next.js frontend compiled as a **static export** (`out/` folder of HTML/JS/CSS)
+- The compiled `simhammer-server` Rust binary
+- The `compact-data.js` compaction script
+- All build tools needed to compile SimC at runtime (`git`, `g++`, `make`, etc.)
+
+**At startup** — the entrypoint script (`standalone-entrypoint.sh`) runs before the server:
+1. Fetches the latest game data from Raidbots and compacts it (~67% size reduction)
+2. Shallow-clones SimulationCraft (`--depth 1`) the first time, or runs `git fetch` on subsequent starts to detect new commits
+3. Recompiles `simc` only when a new commit is found (or if the binary is missing)
+4. Hands off to `simhammer-server`
+
+**At request time** — the Rust server handles everything on port 8000:
+- `GET /api/*` — served by Rust API handlers
+- `GET /_next/*` — served as static files from the baked-in `out/` folder
+- Everything else — falls back to the appropriate static HTML page (SPA routing)
+
+Because the frontend is built with `NEXT_PUBLIC_API_URL=""`, all API calls compile to relative URLs (e.g. `/api/sim`), so the browser talks to the same origin it loaded the UI from — no CORS, no proxy needed.
+
+### Persistent volumes
+
+The volumes cache the heavy work across container restarts:
+
+| Volume | Contents | Without it |
+|--------|----------|------------|
+| `simhammer-data` | Compacted game data JSONs | Re-downloaded & re-compacted on every start |
+| `simhammer-data-full` | Raw Raidbots downloads | Re-downloaded on every start |
+| `simhammer-simc` | SimC git repo + compiled binary | Re-cloned and re-compiled on every start (~5 min) |
+| `simhammer-db` | SQLite job history | Lost on every restart |
+
+### Trade-offs vs. two-container setup
+
+| | Standalone | Two-container |
+|---|---|---|
+| Containers | 1 | 2 (+ nginx) |
+| First start | Slow (compiles SimC, ~5 min) | Fast (SimC baked in at image build) |
+| Subsequent starts | Fast (cached volumes) | Fast |
+| Game data freshness | Always latest (fetched at start) | Pinned to image build time |
+| SimC freshness | Auto-updates on new commits | Pinned to image build time |
+| Image build time | ~2 min (no SimC compile) | ~10 min (includes SimC compile) |
 
 ## Desktop
 
@@ -105,9 +180,15 @@ Output goes to `desktop/dist/`.
 
 ## Architecture
 
-### Web
+### Web (two-container)
 ```
 Browser → Next.js (3000) → Rust/Actix-web (8000) → SQLite → simc subprocess
+```
+
+### Standalone (single container)
+```
+Browser → Rust/Actix-web (8000) ─── static files (frontend/out/)
+                                └── API handlers → SQLite → simc subprocess
 ```
 
 ### Desktop
@@ -115,7 +196,7 @@ Browser → Next.js (3000) → Rust/Actix-web (8000) → SQLite → simc subproc
 Electron → Next.js → Rust/Actix-web (17384) → MemoryStorage → simc subprocess
 ```
 
-Both use the same Next.js frontend and the same Rust core library (`simhammer-core`). The core provides API routes, addon parsing, profileset generation, and simc process management. Storage is abstracted via a `JobStorage` trait — the web server uses `SqliteStorage`, the desktop app uses `MemoryStorage`.
+Both web modes and the desktop app use the same Next.js frontend and the same Rust core library (`simhammer-core`). The core provides API routes, addon parsing, profileset generation, and simc process management. Storage is abstracted via a `JobStorage` trait — the web server uses `SqliteStorage`, the desktop app uses `MemoryStorage`.
 
 ## Environment Variables
 
@@ -126,4 +207,5 @@ Both use the same Next.js frontend and the same Rust core library (`simhammer-co
 | `DATABASE_URL` | `simhammer.db` | SQLite database path (web only) |
 | `PORT` | `8000` | Server port |
 | `BIND_HOST` | `0.0.0.0` | Server bind address |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API URL (frontend) |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API URL (frontend build-time) |
+| `FRONTEND_DIR` | _(unset)_ | Path to static frontend files (standalone mode only) |
