@@ -190,7 +190,6 @@ async fn run_simc_subprocess(
             cmd.arg(*opt);
         }
     }
-    }
     for opt in SIM_OPTIONS {
         cmd.arg(*opt);
     }
