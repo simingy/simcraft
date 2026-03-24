@@ -7,6 +7,7 @@ import SimSharedConfig from "./components/SimSharedConfig";
 import SidebarNav from "./components/SidebarNav";
 import UpdateChecker from "./components/UpdateChecker";
 import WindowControls from "./components/WindowTitlebar";
+import DynamicLayout from "./components/DynamicLayout";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -59,20 +60,10 @@ export default function RootLayout({
             </div>
           </header>
           
-          <div className="flex flex-1 max-w-[1600px] mx-auto w-full">
-            {/* Left Sidebar Menu */}
-            <aside className="w-[260px] border-r border-border/50 shrink-0 hidden md:flex flex-col py-8 px-4">
-              <SidebarNav />
-            </aside>
-            
-            {/* Main Content Pane */}
-            <main className="flex-1 min-w-0 flex flex-col relative px-8 py-10">
-              <div className="w-full max-w-4xl mx-auto space-y-6">
-                <SimSharedConfig />
-                {children}
-              </div>
-            </main>
-          </div>
+          <DynamicLayout>
+            <SimSharedConfig />
+            {children}
+          </DynamicLayout>
         </SimProvider>
         <footer className="border-t border-border/50 mt-16 py-8">
           <p className="text-center text-[13px] text-gray-400 max-w-2xl mx-auto leading-relaxed">

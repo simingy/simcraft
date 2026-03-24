@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
 interface SimContextType {
   simcInput: string;
@@ -17,6 +17,8 @@ interface SimContextType {
   setFightLength: (v: number) => void;
   customSimc: string;
   setCustomSimc: (v: string) => void;
+  navStyle: "sidebar" | "top";
+  setNavStyle: (v: "sidebar" | "top") => void;
 }
 
 const SimContext = createContext<SimContextType | null>(null);
@@ -35,6 +37,12 @@ function readStoredThreads(): number {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
+function readStoredNavStyle(): "sidebar" | "top" {
+  if (typeof window === "undefined") return "sidebar";
+  const v = localStorage.getItem("simhammer_nav_style");
+  return v === "top" ? "top" : "sidebar";
+}
+
 export function SimProvider({ children }: { children: ReactNode }) {
   const [simcInput, setSimcInput] = useState("");
   const [fightStyle, setFightStyle] = useState("Patchwerk");
@@ -43,15 +51,21 @@ export function SimProvider({ children }: { children: ReactNode }) {
   const [targetCount, setTargetCount] = useState(1);
   const [fightLength, setFightLength] = useState(300);
   const [customSimc, setCustomSimc] = useState("");
+  const [navStyle, _setNavStyle] = useState<"sidebar" | "top">(readStoredNavStyle);
 
   const setThreads = useCallback((v: number) => {
     _setThreads(v);
     try { localStorage.setItem("simhammer_threads", String(v)); } catch {}
   }, []);
 
+  const setNavStyle = useCallback((v: "sidebar" | "top") => {
+    _setNavStyle(v);
+    try { localStorage.setItem("simhammer_nav_style", v); } catch {}
+  }, []);
+
   return (
     <SimContext.Provider
-      value={{ simcInput, setSimcInput, fightStyle, setFightStyle, threads, setThreads, selectedTalent, setSelectedTalent, targetCount, setTargetCount, fightLength, setFightLength, customSimc, setCustomSimc }}
+      value={{ simcInput, setSimcInput, fightStyle, setFightStyle, threads, setThreads, selectedTalent, setSelectedTalent, targetCount, setTargetCount, fightLength, setFightLength, customSimc, setCustomSimc, navStyle, setNavStyle }}
     >
       {children}
     </SimContext.Provider>

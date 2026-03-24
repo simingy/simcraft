@@ -5,9 +5,12 @@ use tokio_postgres::{Client, NoTls};
 use crate::models::{Job, JobStatus};
 use super::JobStorage;
 
+use std::collections::HashMap;
+
 pub struct PostgresStorage {
     client: Mutex<Client>,
     rt: tokio::runtime::Runtime,
+    logs: Mutex<HashMap<String, Vec<String>>>,
 }
 
 impl PostgresStorage {
@@ -51,7 +54,11 @@ impl PostgresStorage {
             );"
         ).await.expect("Failed to create jobs table");
 
-        Self { client: Mutex::new(client), rt }
+        Self {
+            client: Mutex::new(client),
+            rt,
+            logs: Mutex::new(HashMap::new()),
+        }
     }
 
     /// Run a closure with the DB client on a fresh OS thread,
@@ -108,6 +115,7 @@ impl PostgresStorage {
             fight_style: row.get(12),
             target_error: row.get(13),
             created_at: row.get(14),
+            logs: Vec::new(),
         }
     }
 }
@@ -145,7 +153,7 @@ impl JobStorage for PostgresStorage {
     }
 
     fn get(&self, id: &str) -> Option<Job> {
-        self.blocking(|client| {
+        let mut job = self.blocking(|client| {
             self.rt.block_on(async {
                 client.query_opt(
                     "SELECT id, status, sim_type, simc_input, result_json, combo_metadata_json,
@@ -154,6 +162,25 @@ impl JobStorage for PostgresStorage {
                      FROM jobs WHERE id = $1",
                     &[&id],
                 ).await.ok().flatten().map(|row| Self::row_to_job(&row))
+            })
+        });
+
+        if let Some(ref mut j) = job {
+            j.logs = self.get_logs(id);
+        }
+        job
+    }
+
+    fn list(&self) -> Vec<Job> {
+        self.blocking(|client| {
+            self.rt.block_on(async {
+                client.query(
+                    "SELECT id, status, sim_type, simc_input, result_json, combo_metadata_json,
+                     error_message, progress_pct, progress_stage, progress_detail, stages_completed,
+                     iterations, fight_style, target_error, created_at
+                     FROM jobs ORDER BY created_at DESC",
+                    &[],
+                ).await.unwrap_or_default().iter().map(|row| Self::row_to_job(row)).collect()
             })
         })
     }
@@ -222,5 +249,14 @@ impl JobStorage for PostgresStorage {
                 ).await.ok();
             });
         });
+    }
+
+    fn append_log(&self, id: &str, line: &str) {
+        let mut logs = self.logs.lock().unwrap();
+        logs.entry(id.to_string()).or_default().push(line.to_string());
+    }
+
+    fn get_logs(&self, id: &str) -> Vec<String> {
+        self.logs.lock().unwrap().get(id).cloned().unwrap_or_default()
     }
 }
