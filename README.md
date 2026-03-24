@@ -73,7 +73,7 @@ Or manually with explicit volume paths:
 docker run -it -p 8000:8000 \
   -v simhammer-data:/app/resources/data \
   -v simhammer-data-full:/app/resources/data_full \
-  -v simhammer-simc:/app/resources/simc_repo \
+  -v simhammer-simc:/app/resources/simc \
   -v simhammer-db:/app/db \
   simhammer-standalone
 ```
@@ -84,16 +84,16 @@ Visit **http://localhost:8000** — the Rust server handles everything.
 
 The standard web deployment uses two containers (frontend + backend) and requires a reverse proxy to stitch them together. The standalone image eliminates all of that:
 
-**At build time** — Docker produces a single image containing:
+**At build time** — Docker produces a single **Alpine-based** image containing:
 - The Next.js frontend compiled as a **static export** (`out/` folder of HTML/JS/CSS)
-- The compiled `simhammer-server` Rust binary
+- The compiled `simhammer-server` Rust binary (musl-native)
 - The `compact-data.js` compaction script
-- All build tools needed to compile SimC at runtime (`git`, `g++`, `make`, etc.)
+- Minimal runtime dependencies (`libcurl`, `libstdc++`, `bash`) — no C++ build tools needed!
 
 **At startup** — the entrypoint script (`standalone-entrypoint.sh`) runs before the server:
 1. Fetches the latest game data from Raidbots and compacts it (~67% size reduction)
-2. Shallow-clones SimulationCraft (`--depth 1`) the first time, or runs `git fetch` on subsequent starts to detect new commits
-3. Recompiles `simc` only when a new commit is found (or if the binary is missing)
+2. Fetches the latest `simc` binary from **`SimulationCraft/simc:latest`** on Docker Hub directly via the Registry HTTP API (requires only `curl`/`jq`/`tar` — no Docker daemon needed)
+3. Caches the layer digest locally; only re-downloads if the upstream image is updated
 4. Hands off to `simhammer-server`
 
 **At request time** — the Rust server handles everything on port 8000:
@@ -111,7 +111,7 @@ The volumes cache the heavy work across container restarts:
 |--------|----------|------------|
 | `simhammer-data` | Compacted game data JSONs | Re-downloaded & re-compacted on every start |
 | `simhammer-data-full` | Raw Raidbots downloads | Re-downloaded on every start |
-| `simhammer-simc` | SimC git repo + compiled binary | Re-cloned and re-compiled on every start (~5 min) |
+| `simhammer-simc` | Persistent cache for the `simc` binary + digest | Re-downloaded from Docker Hub on every start |
 | `simhammer-db` | SQLite job history | Lost on every restart |
 
 ### Trade-offs vs. two-container setup
@@ -119,11 +119,11 @@ The volumes cache the heavy work across container restarts:
 | | Standalone | Two-container |
 |---|---|---|
 | Containers | 1 | 2 (+ nginx) |
-| First start | Slow (compiles SimC, ~5 min) | Fast (SimC baked in at image build) |
+| First start | **Fast** (Registry download, ~30 sec) | Fast (SimC baked in at image build) |
 | Subsequent starts | Fast (cached volumes) | Fast |
 | Game data freshness | Always latest (fetched at start) | Pinned to image build time |
-| SimC freshness | Auto-updates on new commits | Pinned to image build time |
-| Image build time | ~2 min (no SimC compile) | ~10 min (includes SimC compile) |
+| SimC freshness | Auto-updates from Docker Hub | Pinned to image build time |
+| Image build time | **Very Fast** (Alpine-based, no C++ compile) | ~10 min (includes SimC compile) |
 
 ## Desktop
 

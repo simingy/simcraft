@@ -12,7 +12,8 @@ ENV NEXT_PUBLIC_API_URL=""
 RUN npm run build
 
 # --- Stage 2: Build the Rust Backend ---
-FROM rust:1.88-bookworm AS backend-builder
+FROM rust:1.88-alpine AS backend-builder
+RUN apk add --no-cache musl-dev
 WORKDIR /build
 COPY backend/Cargo.toml ./
 COPY backend/core/ core/
@@ -20,12 +21,12 @@ COPY backend/server/ server/
 RUN cargo build --release -p simhammer-server
 
 # --- Stage 3: Final Runtime ---
-# Contains build tools so it can compile SimC + Node.js so it can compact data at startup.
-FROM node:20-slim
+# Node.js is needed to run compact-data.js at startup.
+FROM node:20-alpine
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl jq git make g++ libcurl4-openssl-dev libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    ca-certificates curl jq bash libcurl libstdc++ gcompat \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
@@ -43,8 +44,8 @@ COPY backend/core/season-config.json /app/default_season_config.json
 COPY standalone-entrypoint.sh /app/standalone-entrypoint.sh
 RUN chmod +x /app/standalone-entrypoint.sh
 
-# Volumes for persistent caching of fetched data and compiled simc
-VOLUME ["/app/resources/data", "/app/resources/data_full", "/app/resources/simc_repo", "/app/db"]
+# Volumes for persistent caching of fetched game data, the simc binary, and the SQLite db
+VOLUME ["/app/resources/data", "/app/resources/data_full", "/app/resources/simc", "/app/db"]
 
 ENV DATA_DIR=/app/resources/data
 ENV SIMC_PATH=/usr/local/bin/simc

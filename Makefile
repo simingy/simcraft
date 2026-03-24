@@ -36,6 +36,6 @@ run-standalone:
 	docker run -it -p 8000:8000 \
 		-v simhammer-data:/app/resources/data \
 		-v simhammer-data-full:/app/resources/data_full \
-		-v simhammer-simc:/app/resources/simc_repo \
+		-v simhammer-simc:/app/resources/simc \
 		-v simhammer-db:/app/db \
 		simhammer-standalone
